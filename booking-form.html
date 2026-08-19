@@ -223,11 +223,6 @@
     font-weight:700;
     box-shadow:0 0 14px rgba(196,26,26,.55);
   }
-  .cal-dot{
-    position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
-    width:5px;height:5px;border-radius:50%;background:var(--red);
-  }
-  .cal-day.selected .cal-dot{background:var(--white);}
   .cal-day[title]:hover::after{
     content:attr(title);
     position:absolute;
@@ -873,19 +868,18 @@ async function renderCalendar(){
     const info = availability[key];
     const isPast = thisDate < todayFloor;
 
+    const isBlocked = state.bookingType === 'booth'
+      ? !!(info && info.boothAvailable === false)
+      : !!(info && (info.hasBookings === true || info.venueAvailable === false));
+
     if (isPast){
       el.classList.add('past');
-    } else if (state.bookingType === 'booth' && info && info.boothAvailable === false){
+    } else if (isBlocked){
       el.classList.add('unavailable');
       el.title = 'Unavailable';
     } else {
       el.classList.add('available');
       el.addEventListener('click', () => selectDate(state.currentYear, state.currentMonth, d, info || {venueAvailable:true, boothAvailable:true}));
-      if (state.bookingType !== 'booth' && info && info.venueAvailable === false){
-        const dot = document.createElement('span');
-        dot.className = 'cal-dot';
-        el.appendChild(dot);
-      }
     }
 
     if (state.selectedDateStr === key) el.classList.add('selected');
@@ -906,12 +900,7 @@ function selectDate(y, m, d, info){
   renderCalendar();
   const box = document.getElementById('selectedDateInfo');
   box.style.display = 'block';
-  const hasPartialBooking = state.bookingType === 'booth'
-    ? !!(info && info.boothAvailable === false)
-    : !!(info && info.venueAvailable === false);
-  const timeNote = hasPartialBooking
-    ? `<div class="note gold" style="margin-top:10px;">Other events are already booked this day. We'll confirm your exact time is available before checkout.</div>`
-    : `<div class="note" style="margin-top:10px;">This date is open. We'll confirm your exact time is available in the final step.</div>`;
+  const timeNote = `<div class="note" style="margin-top:10px;">This date is open. We'll confirm your exact time is available in the final step.</div>`;
   box.innerHTML = (state.bookingType === 'booth'
     ? `<div class="d1">${fmtLongDate(y,m,d)}</div>`
     : `<div class="d1">${fmtLongDate(y,m,d)}</div><div class="d2">${tierLabel(state.pricingTier)}</div>`) + timeNote;
