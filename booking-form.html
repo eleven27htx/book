@@ -563,6 +563,31 @@
               <label>Please Specify *</label>
               <input type="text" id="eventTypeOther">
             </div>
+            <div id="boothOnlyFields" style="display:contents;">
+              <div class="field full" data-field="eventAddress">
+                <label>Event Address *</label>
+                <input type="text" id="eventAddress" placeholder="Full address where the booth will be set up">
+                <div class="err">Event address is required.</div>
+              </div>
+              <div class="field full" data-field="customWordingRequest">
+                <label>Custom Wording for Cover *</label>
+                <input type="text" id="customWordingRequest" placeholder="e.g. Johnson Baby Shower, October 2026">
+                <div class="note" style="margin-top:6px;">This will appear on the front cover of your magazine booth. Black or white background available.</div>
+                <div class="err">Custom wording is required.</div>
+              </div>
+              <div class="field full" data-field="coverColorPreference">
+                <label>Cover Background Color *</label>
+                <div style="display:flex;gap:24px;margin-top:6px;">
+                  <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:14px;color:var(--white);font-weight:400;letter-spacing:0;">
+                    <input type="radio" name="coverColorPreference" value="Black" style="width:auto;"> Black
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:14px;color:var(--white);font-weight:400;letter-spacing:0;">
+                    <input type="radio" name="coverColorPreference" value="White" style="width:auto;"> White
+                  </label>
+                </div>
+                <div class="err">Please select a cover color.</div>
+              </div>
+            </div>
             <div class="field" data-field="guestCount">
               <label>Guest Count *</label>
               <input type="number" id="guestCount" min="1" max="100">
@@ -1327,7 +1352,10 @@ function goToStep(n){
   }
   if (n === 2) renderPackages();
   if (n === 3) renderAddons();
-  if (n === 4) populateStartTimes();
+  if (n === 4){
+    populateStartTimes();
+    document.getElementById('boothOnlyFields').style.display = state.bookingType === 'booth' ? 'contents' : 'none';
+  }
   if (n === 5) { renderReview(); runFinalCheck(); }
 }
 
@@ -1423,6 +1451,15 @@ function validateStep4(){
   ok = validateField('guestCount', guestValid) && ok;
   ok = validateField('startTime', startTime.length > 0) && ok;
 
+  if (state.bookingType === 'booth'){
+    const eventAddress = document.getElementById('eventAddress').value.trim();
+    const customWordingRequest = document.getElementById('customWordingRequest').value.trim();
+    const coverColorPreference = document.querySelector('input[name="coverColorPreference"]:checked');
+    ok = validateField('eventAddress', eventAddress.length > 0) && ok;
+    ok = validateField('customWordingRequest', customWordingRequest.length > 0) && ok;
+    ok = validateField('coverColorPreference', !!coverColorPreference) && ok;
+  }
+
   return ok;
 }
 
@@ -1438,7 +1475,10 @@ document.getElementById('next4').addEventListener('click', () => {
     guestCount: Number(document.getElementById('guestCount').value),
     startTime: document.getElementById('startTime').value,
     hearAbout: document.getElementById('hearAbout').value,
-    additionalInfo: document.getElementById('additionalInfo').value.trim()
+    additionalInfo: document.getElementById('additionalInfo').value.trim(),
+    eventAddress: document.getElementById('eventAddress').value.trim(),
+    customWordingRequest: document.getElementById('customWordingRequest').value.trim(),
+    coverColorPreference: (document.querySelector('input[name="coverColorPreference"]:checked') || {}).value || ''
   };
   goToStep(5);
 });
@@ -1583,7 +1623,17 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     booth_type: state.bookingType === 'booth' ? (state.boothType === 'fullSize' ? 'full_size' : 'mini') : '',
     outside_delivery_area: state.bookingType === 'booth' ? state.outsideDeliveryArea : false,
     delivery_fee: deliveryFee(),
-    balance_due_prior_to_setup: state.bookingType === 'booth'
+    balance_due_prior_to_setup: state.bookingType === 'booth',
+    ...(state.bookingType === 'booth' ? {
+      event_address: state.form.eventAddress,
+      custom_wording_request: state.form.customWordingRequest,
+      cover_color_preference: state.form.coverColorPreference,
+      travel_fee_review_status: state.outsideDeliveryArea ? 'outside_area' : 'within_area',
+      selected_booth_or_addon: state.boothType === 'fullSize' ? 'full_size' : 'mini',
+      customer_name: `${state.form.firstName} ${state.form.lastName}`,
+      customer_email: state.form.email,
+      customer_phone: state.form.phone
+    } : {})
   };
 
   let hadError = false;
