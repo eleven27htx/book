@@ -298,6 +298,7 @@
   .addon-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
   .addon-name{font-weight:600;font-size:14.5px;}
   .addon-price{color:var(--gold);font-size:13px;white-space:nowrap;}
+  .addon-price.included-price{color:var(--muted);text-decoration:line-through;}
   .addon-desc{color:var(--muted);font-size:12px;margin-top:6px;line-height:1.5;}
   .addon-check{
     width:20px;height:20px;border-radius:4px;border:1px solid var(--border);
@@ -708,7 +709,7 @@ const PRICING = {
   },
   addons: [
     { name: 'Post Event Cleaning',      price: 200,  perUnit: false },
-    { name: 'Mini Magazine Booth',      price: 200,  perUnit: false, includedIn: ['The Social', 'The Signature'] },
+    { name: 'Mini Magazine Booth',      price: 200,  perUnit: false, includedIn: ['The Social'] },
     { name: 'Full Size Magazine Booth', price: 400,  perUnit: false, includedIn: ['The Signature'] },
     { name: 'Chafing Dish Package',     price: 125,  perUnit: false },
     { name: 'Cocktail Tables',          price: 10,   perUnit: true,  maxQty: 6,  includedIn: ['The Signature'] },
@@ -1118,7 +1119,7 @@ function renderAddons(){
           <div class="addon-desc">${ADDON_DESCRIPTIONS[addon.name] || ''}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
-          <div class="addon-price">${priceLabel}</div>
+          <div class="addon-price${included ? ' included-price' : ''}">${priceLabel}</div>
           <div class="addon-check">${(s.selected || included) ? '&#10003;' : ''}</div>
         </div>
       </div>
