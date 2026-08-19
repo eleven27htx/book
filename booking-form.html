@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Your Event — Eleven 27 Event Venue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --panel:#181818;
+    --border:#2a2a2a;
+    --red:#c41a1a;
+    --gold:#b8963e;
+    --white:#ffffff;
+    --muted:#aaaaaa;
+    --green:#3ea36b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--white);
+    font-family:'Montserrat',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:'Playfair Display',serif;margin:0;}
+  a{color:var(--gold);}
+
+  .wrap{
+    max-width:1200px;
+    margin:0 auto;
+    padding:24px 20px 120px;
+  }
+
+  /* Header */
+  .header{
+    text-align:center;
+    padding:20px 0 30px;
+  }
+  .logo{
+    font-family:'Playfair Display',serif;
+    font-size:clamp(32px,6vw,48px);
+    font-weight:700;
+    letter-spacing:1px;
+  }
+  .logo .num{color:var(--red);}
+  .tagline{
+    color:var(--gold);
+    font-size:13px;
+    letter-spacing:2.5px;
+    text-transform:uppercase;
+    margin-top:6px;
+  }
+
+  /* Progress bar */
+  .progress{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    max-width:760px;
+    margin:0 auto 40px;
+    position:relative;
+  }
+  .progress::before{
+    content:'';
+    position:absolute;
+    top:13px;
+    left:5%;
+    right:5%;
+    height:2px;
+    background:var(--border);
+    z-index:0;
+  }
+  .progress-fill{
+    position:absolute;
+    top:13px;
+    left:5%;
+    height:2px;
+    background:var(--red);
+    z-index:1;
+    transition:width .4s ease;
+  }
+  .progress-step{
+    position:relative;
+    z-index:2;
+    flex:1;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+  .progress-step .dot{
+    width:26px;height:26px;border-radius:50%;
+    background:var(--panel);
+    border:2px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;
+    color:var(--muted);
+    transition:all .3s ease;
+  }
+  .progress-step.active .dot{
+    border-color:var(--red);
+    background:var(--red);
+    color:var(--white);
+    box-shadow:0 0 12px rgba(196,26,26,.5);
+  }
+  .progress-step.done .dot{
+    border-color:var(--red);
+    background:var(--bg);
+    color:var(--red);
+  }
+  .progress-step .label{
+    font-size:10px;
+    letter-spacing:1.2px;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-weight:600;
+  }
+  .progress-step.active .label{color:var(--white);}
+
+  /* Layout with sticky summary */
+  .layout{
+    display:flex;
+    gap:28px;
+    align-items:flex-start;
+  }
+  .main-col{flex:1;min-width:0;}
+  .summary-col{width:320px;flex-shrink:0;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:28px;
+  }
+
+  .step{display:none;animation:fadeSlide .35s ease;}
+  .step.visible{display:block;}
+  @keyframes fadeSlide{
+    from{opacity:0;transform:translateY(14px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  .step h2{font-size:26px;margin-bottom:6px;}
+  .step-sub{color:var(--muted);font-size:14px;margin-bottom:24px;}
+
+  /* Calendar */
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .cal-nav button{
+    background:var(--bg);border:1px solid var(--border);color:var(--white);
+    width:36px;height:36px;border-radius:6px;cursor:pointer;font-size:16px;
+    transition:border-color .2s;
+  }
+  .cal-nav button:hover:not(:disabled){border-color:var(--gold);}
+  .cal-nav button:disabled{opacity:.3;cursor:not-allowed;}
+  .cal-nav .month-label{font-family:'Playfair Display',serif;font-size:20px;}
+  .cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+    position:relative;
+    min-height:180px;
+  }
+  .cal-dow{
+    text-align:center;font-size:11px;color:var(--muted);
+    letter-spacing:1px;padding-bottom:8px;font-weight:600;
+  }
+  .cal-day{
+    aspect-ratio:1;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:6px;
+    font-size:14px;
+    cursor:pointer;
+    border:1px solid transparent;
+    background:rgba(255,255,255,.02);
+    transition:all .15s ease;
+    position:relative;
+  }
+  .cal-day.empty{visibility:hidden;cursor:default;}
+  .cal-day.past,.cal-day.unavailable{
+    color:#555;
+    text-decoration:line-through;
+    cursor:not-allowed;
+    background:transparent;
+  }
+  .cal-day.available:hover{border-color:var(--gold);}
+  .cal-day.selected{
+    background:var(--red);
+    color:var(--white);
+    font-weight:700;
+    box-shadow:0 0 14px rgba(196,26,26,.55);
+  }
+  .cal-day[title]:hover::after{
+    content:attr(title);
+    position:absolute;
+    bottom:110%;left:50%;transform:translateX(-50%);
+    background:#000;border:1px solid var(--border);
+    padding:4px 8px;border-radius:4px;font-size:11px;
+    white-space:nowrap;color:var(--white);z-index:10;
+  }
+  .cal-loading{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(10,10,10,.6);border-radius:8px;
+  }
+  .pulse{
+    width:14px;height:14px;border-radius:50%;background:var(--red);
+    animation:pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:.3;transform:scale(.8);}
+    50%{opacity:1;transform:scale(1.15);}
+  }
+  .selected-date-info{
+    margin-top:20px;padding:16px;background:var(--bg);
+    border:1px solid var(--border);border-radius:8px;font-size:14px;
+  }
+  .selected-date-info .d1{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:4px;}
+  .selected-date-info .d2{color:var(--gold);font-size:12px;letter-spacing:.5px;text-transform:uppercase;}
+
+  /* Packages */
+  .pkg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+  .pkg-card{
+    background:var(--bg);border:1px solid var(--border);border-radius:10px;
+    padding:20px;cursor:pointer;position:relative;transition:all .2s ease;
+  }
+  .pkg-card:hover{border-color:var(--gold);}
+  .pkg-card.selected{border-color:var(--red);box-shadow:0 0 0 1px var(--red),0 0 16px rgba(196,26,26,.35);}
+  .pkg-badge{
+    position:absolute;top:-10px;right:14px;
+    background:var(--gold);color:#141414;font-size:10px;font-weight:700;
+    padding:4px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;
+  }
+  .pkg-name{font-family:'Playfair Display',serif;font-size:19px;margin-bottom:4px;}
+  .pkg-hours{color:var(--muted);font-size:12px;margin-bottom:10px;}
+  .pkg-price{font-size:24px;font-weight:700;color:var(--red);margin-bottom:12px;}
+  .pkg-price small{font-size:12px;color:var(--muted);font-weight:400;}
+  .pkg-includes{list-style:none;padding:0;margin:0;font-size:12.5px;color:var(--muted);line-height:1.7;}
+  .pkg-includes li::before{content:'— ';color:var(--gold);}
+
+  .hourly-box{
+    background:var(--bg);border:1px solid var(--border);border-radius:10px;
+    padding:22px;margin-bottom:20px;cursor:pointer;transition:border-color .2s;
+  }
+  .hourly-box.selected{border-color:var(--red);box-shadow:0 0 0 1px var(--red);}
+  .hourly-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+  .qty-ctrl{display:flex;align-items:center;gap:12px;}
+  .qty-ctrl button{
+    width:34px;height:34px;border-radius:50%;border:1px solid var(--border);
+    background:var(--panel);color:var(--white);font-size:18px;cursor:pointer;
+  }
+  .qty-ctrl button:disabled{opacity:.3;cursor:not-allowed;}
+  .qty-ctrl .qty-val{min-width:24px;text-align:center;font-weight:600;}
+  .note{color:var(--muted);font-size:12.5px;margin-top:16px;font-style:italic;}
+  .note.gold{color:var(--gold);font-style:normal;}
+
+  /* Addons */
+  .addon-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+  .addon-card{
+    background:var(--bg);border:1px solid var(--border);border-radius:10px;
+    padding:16px;cursor:pointer;transition:border-color .2s;
+  }
+  .addon-card.selected{border-color:var(--red);}
+  .addon-card.included{border-color:var(--green);cursor:default;}
+  .addon-card.dimmed{opacity:.55;}
+  .addon-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .addon-name{font-weight:600;font-size:14.5px;}
+  .addon-price{color:var(--gold);font-size:13px;white-space:nowrap;}
+  .addon-desc{color:var(--muted);font-size:12px;margin-top:6px;line-height:1.5;}
+  .addon-check{
+    width:20px;height:20px;border-radius:4px;border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;
+  }
+  .addon-card.selected .addon-check{background:var(--red);border-color:var(--red);}
+  .addon-card.included .addon-check{background:var(--green);border-color:var(--green);}
+  .addon-included-tag{color:var(--green);font-size:11.5px;font-weight:600;margin-top:6px;}
+  .addon-warn{color:var(--gold);font-size:11.5px;margin-top:6px;}
+  .addon-qty{display:flex;align-items:center;gap:10px;margin-top:10px;}
+  .addon-qty button{
+    width:26px;height:26px;border-radius:50%;border:1px solid var(--border);
+    background:var(--panel);color:var(--white);cursor:pointer;
+  }
+
+  /* Form */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .form-grid .full{grid-column:1/-1;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase;}
+  .field input,.field select,.field textarea{
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);
+    padding:12px 14px;border-radius:6px;font-family:'Montserrat',sans-serif;font-size:14px;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold);}
+  .field textarea{resize:vertical;min-height:80px;}
+  .field .err{color:var(--red);font-size:11.5px;margin-top:5px;display:none;}
+  .field.invalid input,.field.invalid select{border-color:var(--red);}
+  .field.invalid .err{display:block;}
+
+  /* Review */
+  .rev-section{border-bottom:1px solid var(--border);padding:16px 0;}
+  .rev-section:last-child{border-bottom:none;}
+  .rev-row{display:flex;justify-content:space-between;font-size:14px;padding:5px 0;color:var(--muted);}
+  .rev-row span:last-child{color:var(--white);text-align:right;}
+  .rev-title{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:10px;}
+  .rev-total{display:flex;justify-content:space-between;font-size:20px;font-weight:700;padding-top:14px;}
+  .rev-total .amt{color:var(--red);}
+  .deposit-box{margin-top:16px;padding:16px;background:var(--bg);border:1px solid var(--gold);border-radius:8px;}
+  .deposit-box .line{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;}
+  .hold-note{color:var(--gold);font-size:12.5px;margin-top:14px;}
+  .avail-msg{padding:12px 14px;border-radius:8px;font-size:13.5px;margin-top:16px;}
+  .avail-msg.bad{background:rgba(196,26,26,.15);border:1px solid var(--red);color:#ff9d9d;}
+  .avail-msg.warn{background:rgba(184,150,62,.12);border:1px solid var(--gold);color:var(--gold);}
+  .avail-msg.checking{color:var(--muted);}
+
+  /* Buttons */
+  .btn-row{display:flex;justify-content:space-between;margin-top:30px;gap:12px;}
+  .btn{
+    padding:14px 28px;border-radius:6px;font-size:13px;font-weight:600;letter-spacing:.6px;
+    text-transform:uppercase;cursor:pointer;border:none;font-family:'Montserrat',sans-serif;
+    transition:all .2s ease;
+  }
+  .btn-primary{background:var(--red);color:var(--white);}
+  .btn-primary:hover:not(:disabled){background:#a91515;}
+  .btn-primary:disabled{background:#3a2222;color:#7a5a5a;cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--white);}
+  .btn-submit{
+    width:100%;padding:18px;font-size:15px;background:var(--red);color:var(--white);
+    border-radius:8px;border:none;cursor:pointer;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  }
+  .btn-submit:hover:not(:disabled){background:#a91515;}
+  .btn-submit:disabled{background:#3a2222;color:#7a5a5a;cursor:not-allowed;}
+
+  /* Sticky summary desktop */
+  .summary-panel{position:sticky;top:20px;}
+  .summary-panel h3{font-size:15px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:16px;color:var(--gold);}
+  .sum-row{display:flex;justify-content:space-between;font-size:13.5px;padding:7px 0;border-bottom:1px solid var(--border);color:var(--muted);}
+  .sum-row span:last-child{color:var(--white);text-align:right;max-width:60%;}
+  .sum-total{display:flex;justify-content:space-between;padding-top:14px;font-size:17px;font-weight:700;}
+  .sum-total .amt{color:var(--red);}
+  .sum-deposit{font-size:12px;color:var(--gold);margin-top:6px;text-align:right;}
+  .sum-empty{color:var(--muted);font-size:13px;font-style:italic;}
+
+  /* Mobile bottom bar */
+  .mobile-bar{
+    display:none;position:fixed;bottom:0;left:0;right:0;
+    background:var(--panel);border-top:1px solid var(--border);
+    padding:12px 16px;z-index:50;
+  }
+  .mobile-bar-head{display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+  .mobile-bar-total{font-weight:700;color:var(--red);font-size:16px;}
+  .mobile-bar-toggle{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+  .mobile-bar-body{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+  .mobile-bar-body.open{max-height:300px;overflow-y:auto;margin-top:12px;}
+
+  /* Confirmation */
+  .confirm-wrap{text-align:center;padding:60px 20px;max-width:520px;margin:0 auto;}
+  .checkmark{
+    width:84px;height:84px;border-radius:50%;border:3px solid var(--red);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 26px;
+    animation:pop .5s ease;
+  }
+  .checkmark svg{width:40px;height:40px;}
+  @keyframes pop{
+    0%{transform:scale(0);opacity:0;}
+    60%{transform:scale(1.15);opacity:1;}
+    100%{transform:scale(1);}
+  }
+  .confirm-wrap h2{font-size:30px;margin-bottom:8px;}
+  .confirm-sub{color:var(--gold);font-size:14px;margin-bottom:28px;letter-spacing:.5px;}
+  .confirm-details{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:22px;text-align:left;margin-bottom:22px;}
+  .confirm-msg{color:var(--muted);font-size:14px;line-height:1.7;}
+  .confirm-msg.err-note{color:var(--gold);margin-top:10px;}
+
+  @media(max-width:860px){
+    .layout{flex-direction:column;}
+    .summary-col{display:none;}
+    .mobile-bar{display:block;}
+    .wrap{padding-bottom:140px;}
+    .form-grid{grid-template-columns:1fr;}
+    .progress-step .label{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="header">
+    <div class="logo">Eleven<span class="num">27</span></div>
+    <div class="tagline">Elevated Events. Affordable Luxury.</div>
+  </div>
+
+  <div class="progress" id="progressBar">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    <div class="progress-step" data-step="1"><div class="dot">1</div><div class="label">Date</div></div>
+    <div class="progress-step" data-step="2"><div class="dot">2</div><div class="label">Package</div></div>
+    <div class="progress-step" data-step="3"><div class="dot">3</div><div class="label">Add-Ons</div></div>
+    <div class="progress-step" data-step="4"><div class="dot">4</div><div class="label">Your Info</div></div>
+    <div class="progress-step" data-step="5"><div class="dot">5</div><div class="label">Review</div></div>
+  </div>
+
+  <div class="layout" id="formLayout">
+    <div class="main-col">
+      <div class="card">
+
+        <!-- STEP 1 -->
+        <div class="step" data-step="1">
+          <h2>Select Your Date</h2>
+          <div class="step-sub">Choose an available date for your event.</div>
+          <div class="cal-nav">
+            <button id="prevMonth" type="button">&#8249;</button>
+            <div class="month-label" id="monthLabel"></div>
+            <button id="nextMonth" type="button">&#8250;</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="selected-date-info" id="selectedDateInfo" style="display:none;"></div>
+          <div class="btn-row">
+            <div></div>
+            <button class="btn btn-primary" id="next1" disabled>Next</button>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step" data-step="2">
+          <h2>Select Your Package</h2>
+          <div class="step-sub" id="pkgSub"></div>
+          <div id="pkgContainer"></div>
+          <div class="note" id="pkgAddlHourNote">Additional hours available at $150/hour subject to availability.</div>
+          <div class="btn-row">
+            <button class="btn btn-ghost" id="back2" type="button">Back</button>
+            <button class="btn btn-primary" id="next2" disabled>Next</button>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step" data-step="3">
+          <h2>Add-Ons</h2>
+          <div class="step-sub">Enhance your event. This step is optional.</div>
+          <div class="addon-grid" id="addonGrid"></div>
+          <div class="btn-row">
+            <button class="btn btn-ghost" id="back3" type="button">Back</button>
+            <button class="btn btn-primary" id="next3" type="button">Next</button>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step" data-step="4">
+          <h2>Your Information</h2>
+          <div class="step-sub">Tell us about you and your event.</div>
+          <div class="form-grid" id="infoForm">
+            <div class="field" data-field="firstName">
+              <label>First Name *</label>
+              <input type="text" id="firstName">
+              <div class="err">First name is required.</div>
+            </div>
+            <div class="field" data-field="lastName">
+              <label>Last Name *</label>
+              <input type="text" id="lastName">
+              <div class="err">Last name is required.</div>
+            </div>
+            <div class="field" data-field="email">
+              <label>Email *</label>
+              <input type="email" id="email">
+              <div class="err">Enter a valid email address.</div>
+            </div>
+            <div class="field" data-field="phone">
+              <label>Phone *</label>
+              <input type="tel" id="phone" placeholder="(555) 555-5555">
+              <div class="err">Enter a valid 10-digit phone number.</div>
+            </div>
+            <div class="field" data-field="eventType">
+              <label>Event Type *</label>
+              <select id="eventType">
+                <option value="">Select one</option>
+                <option>Birthday Party</option>
+                <option>Wedding/Reception</option>
+                <option>Baby Shower</option>
+                <option>Bridal Shower</option>
+                <option>Quinceañera</option>
+                <option>Graduation Celebration</option>
+                <option>Corporate Event</option>
+                <option>Anniversary</option>
+                <option>Other</option>
+              </select>
+              <div class="err">Please select an event type.</div>
+            </div>
+            <div class="field" id="eventTypeOtherField" style="display:none;">
+              <label>Please Specify *</label>
+              <input type="text" id="eventTypeOther">
+            </div>
+            <div class="field" data-field="guestCount">
+              <label>Guest Count *</label>
+              <input type="number" id="guestCount" min="1" max="100">
+              <div class="err">Enter a guest count between 1 and 100.</div>
+            </div>
+            <div class="field" data-field="startTime">
+              <label>Preferred Start Time *</label>
+              <select id="startTime"></select>
+              <div class="err">Please select a start time.</div>
+            </div>
+            <div class="field">
+              <label>How Did You Hear About Us?</label>
+              <select id="hearAbout">
+                <option value="">Select one</option>
+                <option>Instagram</option>
+                <option>Facebook</option>
+                <option>Google</option>
+                <option>Word of Mouth</option>
+                <option>Referral</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>Anything Else We Should Know?</label>
+              <textarea id="additionalInfo"></textarea>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost" id="back4" type="button">Back</button>
+            <button class="btn btn-primary" id="next4" type="button">Next</button>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step" data-step="5">
+          <h2>Review &amp; Submit</h2>
+          <div class="step-sub">Please confirm everything looks correct.</div>
+          <div id="reviewContainer"></div>
+          <div class="avail-msg checking" id="finalCheckMsg">Checking final availability...</div>
+          <div class="btn-row">
+            <button class="btn btn-ghost" id="back5" type="button">Back</button>
+            <button class="btn-submit" id="submitBtn" disabled style="width:auto;padding:14px 28px;">Submit and Hold My Date</button>
+          </div>
+        </div>
+
+        <!-- CONFIRMATION -->
+        <div class="step" data-step="confirm">
+          <div class="confirm-wrap">
+            <div class="checkmark">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke="#c41a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h2>You're Almost Booked!</h2>
+            <div class="confirm-sub">Eleven 27 Event Venue — North Houston, TX</div>
+            <div class="confirm-details" id="confirmDetails"></div>
+            <div class="confirm-msg">A member of our team will contact you within 24 hours with your payment link to secure your date. Check your email for a confirmation of your submission.</div>
+            <div class="confirm-msg err-note" id="confirmErrNote" style="display:none;">If you don't hear from us within 24 hours please call us directly.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="summary-col">
+      <div class="card summary-panel">
+        <h3>Your Booking</h3>
+        <div id="summaryBody"><div class="sum-empty">Select a date to get started.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-bar" id="mobileBar">
+  <div class="mobile-bar-head" id="mobileBarToggle">
+    <div>
+      <div class="mobile-bar-toggle">Order Summary</div>
+      <div class="mobile-bar-total" id="mobileBarTotal">$0</div>
+    </div>
+    <div class="mobile-bar-toggle" id="mobileBarArrow">View &#9650;</div>
+  </div>
+  <div class="mobile-bar-body" id="mobileBarBody"></div>
+</div>
+
+<script>
+// ============================================================
+// PRICING CONFIG — UPDATE PRICES HERE ONLY
+// ============================================================
+const PRICING = {
+  weekday: {
+    ratePerHour: 100,
+    minHours: 4,
+    minTotal: 400,
+    note: 'Monday–Thursday. Friday before 4:00 PM at same rate.'
+  },
+  packages: {
+    friday: [
+      { name: 'The Space',     hours: 6,  price: 1050 },
+      { name: 'The Space',     hours: 12, price: 1900 },
+      { name: 'The Social',    hours: 6,  price: 1950 },
+      { name: 'The Social',    hours: 12, price: 2800 },
+      { name: 'The Signature', hours: 12, price: 4500, customQuote: true, startingAt: true }
+    ],
+    saturday: [
+      { name: 'The Space',     hours: 6,  price: 1250 },
+      { name: 'The Space',     hours: 12, price: 2300 },
+      { name: 'The Social',    hours: 6,  price: 2300 },
+      { name: 'The Social',    hours: 12, price: 3200 },
+      { name: 'The Signature', hours: 12, price: 5500, customQuote: true, startingAt: true }
+    ],
+    sunday: [
+      { name: 'The Space',     hours: 6,  price: 1050 },
+      { name: 'The Space',     hours: 12, price: 1900 },
+      { name: 'The Social',    hours: 6,  price: 1850 },
+      { name: 'The Social',    hours: 12, price: 2700 },
+      { name: 'The Signature', hours: 12, price: 4500, customQuote: true, startingAt: true }
+    ]
+  },
+  addons: [
+    { name: 'Post Event Cleaning',      price: 200,  perUnit: false },
+    { name: 'Mini Magazine Booth',      price: 200,  perUnit: false, includedIn: ['The Social', 'The Signature'] },
+    { name: 'Full Size Magazine Booth', price: 400,  perUnit: false, includedIn: ['The Signature'] },
+    { name: 'Chafing Dish Package',     price: 125,  perUnit: false },
+    { name: 'Cocktail Tables',          price: 10,   perUnit: true,  maxQty: 6,  includedIn: ['The Signature'] },
+    { name: 'Marquee Letters/Numbers',  price: 40,   perUnit: true,  maxQty: 10, includedIn: ['The Signature'] },
+    { name: 'Black Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Social', 'The Signature'] },
+    { name: 'White Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Social', 'The Signature'] },
+    { name: 'Additional Hour',          price: 150,  perUnit: true,  maxQty: 4  },
+    { name: 'Bartender',                price: 0,    customQuote: true },
+    { name: 'Security',                 price: 0,    customQuote: true },
+    { name: 'Event Planning',           price: 0,    customQuote: true },
+    { name: 'Event Coordination',       price: 0,    customQuote: true },
+    { name: 'Decor Package',            price: 0,    customQuote: true },
+    { name: 'Catering',                 price: 0,    customQuote: true },
+    { name: 'DJ',                       price: 0,    customQuote: true },
+    { name: 'Photography',              price: 0,    customQuote: true },
+    { name: 'Videography',              price: 0,    customQuote: true }
+  ],
+  deposit: {
+    moreThan30Days: 500,
+    lessThan30Days: 'full'
+  },
+  additionalHourRate: 150,
+  boothPackages: ['The Social', 'The Signature']
+};
+// ============================================================
+
+const ADDON_DESCRIPTIONS = {
+  'Post Event Cleaning': 'We handle the post-event clean up so you can walk away stress-free.',
+  'Mini Magazine Booth': 'A compact photo/magazine-cover booth for your guests.',
+  'Full Size Magazine Booth': 'Our full-size magazine cover photo booth experience.',
+  'Chafing Dish Package': 'Chafing dishes and warming setup for catered food.',
+  'Cocktail Tables': 'High-top cocktail tables, priced per table.',
+  'Marquee Letters/Numbers': 'Light-up marquee letters or numbers, priced per piece.',
+  'Black Linen': 'Black linen tablecloths, priced per linen.',
+  'White Linen': 'White linen tablecloths, priced per linen.',
+  'Additional Hour': 'Extend your rental beyond your package hours.',
+  'Bartender': 'Professional bartending service for your event.',
+  'Security': 'On-site security staffing for your event.',
+  'Event Planning': 'Full-service event planning from our team.',
+  'Event Coordination': 'Day-of coordination to keep your event on track.',
+  'Decor Package': 'Custom decor curated for your event.',
+  'Catering': 'Catering options tailored to your guest count.',
+  'DJ': 'Professional DJ services for your event.',
+  'Photography': 'Professional event photography.',
+  'Videography': 'Professional event videography.'
+};
+
+const PACKAGE_INCLUDES = {
+  'The Space': [
+    '100 clear Chiavari chairs',
+    '10 round tables',
+    '2 eight-foot rectangle tables',
+    '4 six-foot rectangle tables',
+    'Built-in bar',
+    'Kitchenette',
+    'WiFi',
+    'Bluetooth speaker',
+    'Microphone',
+    'Ample parking',
+    'Two ADA accessible restrooms'
+  ],
+  'The Social': [
+    'Everything in The Space',
+    'Black or white linens',
+    'Basic centerpieces',
+    'Mini Magazine Booth'
+  ],
+  'The Signature': [
+    'Everything in The Social',
+    'Event planning',
+    'Event coordination',
+    'Vendor coordination',
+    'Custom floor layout',
+    'Full decor package',
+    'Full size Magazine Booth',
+    'Up to 6 cocktail tables',
+    'Marquee letters and numbers',
+    'Post-event cleaning'
+  ]
+};
+
+const API_URL = 'https://script.google.com/macros/s/AKfycbwb9kvoU0lQSNDiRt6NLJlXKZ9Y3k1kKh7Qe5KIMUaICDYONQXpKJCfI7mg2uPvVkihIg/exec';
+const WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/guejretBwEsF0yB7fx0k/webhook-trigger/7ff1caec-c06e-4e25-bc69-035ef3a38c54';
+const MIN_YEAR = 2026, MIN_MONTH = 10; // October 2026
+const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const state = {
+  currentYear: MIN_YEAR,
+  currentMonth: MIN_MONTH,
+  monthCache: {},
+  selectedDateStr: null,
+  selectedDayData: null,
+  dayOfWeek: null,
+  pricingTier: null,
+  package: null,
+  hourlyHours: PRICING.weekday.minHours,
+  addons: {},
+  form: {},
+  finalCheck: { checked: false, venueAvailable: true, boothAvailable: true },
+  step: 1
+};
+
+PRICING.addons.forEach(a => { state.addons[a.name] = { selected: false, qty: a.perUnit ? 1 : null }; });
+
+// ---------- helpers ----------
+function pad(n){ return String(n).padStart(2,'0'); }
+function dateKey(y,m,d){ return `${y}-${pad(m)}-${pad(d)}`; }
+function fmtMoney(n){ return '$' + Number(n).toLocaleString('en-US', {maximumFractionDigits:0}); }
+function fmtLongDate(y,m,d){
+  const dt = new Date(y, m-1, d);
+  return `${DOW_NAMES[dt.getDay()]}, ${MONTH_NAMES[m-1]} ${d}, ${y}`;
+}
+function tierForDow(dow){
+  if (dow === 5) return 'friday';
+  if (dow === 6) return 'saturday';
+  if (dow === 0) return 'sunday';
+  return 'weekday';
+}
+function tierLabel(tier){
+  return { weekday:'Weekday Hourly Rate', friday:'Friday Package Pricing', saturday:'Saturday Package Pricing', sunday:'Sunday Package Pricing' }[tier];
+}
+function addlHourTimes(startMinutes, hours){
+  const total = startMinutes + hours*60;
+  return total % 1440;
+}
+function minutesToLabel(mins){
+  mins = ((mins % 1440) + 1440) % 1440;
+  let h = Math.floor(mins/60), m = mins % 60;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  let h12 = h % 12; if (h12 === 0) h12 = 12;
+  return `${h12}:${pad(m)} ${ampm}`;
+}
+function minutesToHHMM(mins){
+  mins = ((mins % 1440) + 1440) % 1440;
+  return `${pad(Math.floor(mins/60))}:${pad(mins%60)}`;
+}
+
+// ---------- calendar ----------
+async function fetchMonth(year, month){
+  const key = `${year}-${month}`;
+  if (state.monthCache[key]) return state.monthCache[key];
+  const res = await fetch(`${API_URL}?action=month&year=${year}&month=${month}`);
+  const data = await res.json();
+  state.monthCache[key] = data.availability || {};
+  return state.monthCache[key];
+}
+
+async function renderCalendar(){
+  const grid = document.getElementById('calGrid');
+  document.getElementById('monthLabel').textContent = `${MONTH_NAMES[state.currentMonth-1]} ${state.currentYear}`;
+  document.getElementById('prevMonth').disabled = (state.currentYear === MIN_YEAR && state.currentMonth === MIN_MONTH);
+
+  grid.innerHTML = '';
+  ['S','M','T','W','T','F','S'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-dow'; el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const loading = document.createElement('div');
+  loading.className = 'cal-loading';
+  loading.innerHTML = '<div class="pulse"></div>';
+  grid.style.position = 'relative';
+  grid.appendChild(loading);
+
+  let availability = {};
+  try {
+    availability = await fetchMonth(state.currentYear, state.currentMonth);
+  } catch(e) {
+    console.error('Failed to load availability', e);
+  }
+  loading.remove();
+
+  const firstDow = new Date(state.currentYear, state.currentMonth-1, 1).getDay();
+  const daysInMonth = new Date(state.currentYear, state.currentMonth, 0).getDate();
+  const todayFloor = new Date(MIN_YEAR, MIN_MONTH-1, 1);
+
+  for (let i=0;i<firstDow;i++){
+    const el = document.createElement('div');
+    el.className = 'cal-day empty';
+    grid.appendChild(el);
+  }
+
+  for (let d=1; d<=daysInMonth; d++){
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+    el.textContent = d;
+    const thisDate = new Date(state.currentYear, state.currentMonth-1, d);
+    const key = dateKey(state.currentYear, state.currentMonth, d);
+    const info = availability[key];
+    const isPast = thisDate < todayFloor;
+    const isAvailable = info ? info.venueAvailable !== false : true;
+
+    if (isPast){
+      el.classList.add('past');
+    } else if (info && info.venueAvailable === false){
+      el.classList.add('unavailable');
+      el.title = 'Unavailable';
+    } else {
+      el.classList.add('available');
+      el.addEventListener('click', () => selectDate(state.currentYear, state.currentMonth, d, info || {venueAvailable:true, boothAvailable:true}));
+    }
+
+    if (state.selectedDateStr === key) el.classList.add('selected');
+    grid.appendChild(el);
+  }
+}
+
+function selectDate(y, m, d, info){
+  state.selectedDateStr = dateKey(y,m,d);
+  state.selectedDayData = info;
+  const dow = new Date(y, m-1, d).getDay();
+  state.dayOfWeek = dow;
+  state.pricingTier = tierForDow(dow);
+  state.package = null;
+  state.hourlyHours = PRICING.weekday.minHours;
+  state.finalCheck = { checked:false, venueAvailable:true, boothAvailable:true };
+
+  renderCalendar();
+  const box = document.getElementById('selectedDateInfo');
+  box.style.display = 'block';
+  box.innerHTML = `<div class="d1">${fmtLongDate(y,m,d)}</div><div class="d2">${tierLabel(state.pricingTier)}</div>`;
+  document.getElementById('next1').disabled = false;
+  updateSummary();
+}
+
+document.getElementById('prevMonth').addEventListener('click', () => {
+  let { currentYear:y, currentMonth:m } = state;
+  m--; if (m < 1){ m = 12; y--; }
+  if (y < MIN_YEAR || (y===MIN_YEAR && m<MIN_MONTH)) return;
+  state.currentYear = y; state.currentMonth = m;
+  renderCalendar();
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  let { currentYear:y, currentMonth:m } = state;
+  m++; if (m > 12){ m = 1; y++; }
+  state.currentYear = y; state.currentMonth = m;
+  renderCalendar();
+});
+
+// ---------- packages ----------
+function renderPackages(){
+  const tier = state.pricingTier;
+  const container = document.getElementById('pkgContainer');
+  const sub = document.getElementById('pkgSub');
+  container.innerHTML = '';
+
+  const showHourly = tier === 'weekday' || tier === 'friday';
+  const showPackages = tier === 'friday' || tier === 'saturday' || tier === 'sunday';
+
+  sub.textContent = tier === 'weekday'
+    ? PRICING.weekday.note
+    : `Packages available for ${DOW_NAMES[state.dayOfWeek]}.`;
+
+  if (showHourly){
+    const hours = state.hourlyHours;
+    const total = Math.max(hours * PRICING.weekday.ratePerHour, PRICING.weekday.minTotal);
+    const box = document.createElement('div');
+    box.className = 'hourly-box' + (state.package && state.package.type === 'hourly' ? ' selected' : '');
+    box.innerHTML = `
+      <div class="hourly-row">
+        <div>
+          <div class="pkg-name">Hourly Rental</div>
+          <div class="pkg-hours">$${PRICING.weekday.ratePerHour}/hour · ${PRICING.weekday.minHours}hr minimum</div>
+        </div>
+        <div class="qty-ctrl">
+          <button type="button" id="hourMinus" ${hours<=PRICING.weekday.minHours?'disabled':''}>&minus;</button>
+          <span class="qty-val">${hours} hrs</span>
+          <button type="button" id="hourPlus">+</button>
+        </div>
+        <div class="pkg-price">${fmtMoney(total)}</div>
+      </div>`;
+    box.addEventListener('click', (e) => {
+      if (e.target.id === 'hourMinus' || e.target.id === 'hourPlus') return;
+      selectPackage({ type:'hourly', name:'Hourly Rental', hours: state.hourlyHours, price: Math.max(state.hourlyHours*PRICING.weekday.ratePerHour, PRICING.weekday.minTotal) });
+    });
+    container.appendChild(box);
+    box.querySelector('#hourMinus').addEventListener('click', () => {
+      if (state.hourlyHours > PRICING.weekday.minHours){ state.hourlyHours--; syncHourlySelection(); renderPackages(); }
+    });
+    box.querySelector('#hourPlus').addEventListener('click', () => {
+      state.hourlyHours++; syncHourlySelection(); renderPackages();
+    });
+  }
+
+  if (showPackages){
+    const list = PRICING.packages[tier];
+    const grid = document.createElement('div');
+    grid.className = 'pkg-grid';
+    list.forEach(pkg => {
+      const card = document.createElement('div');
+      const isSelected = state.package && state.package.type === 'package' && state.package.name === pkg.name && state.package.hours === pkg.hours;
+      card.className = 'pkg-card' + (isSelected ? ' selected' : '');
+      const includes = PACKAGE_INCLUDES[pkg.name] || [];
+      card.innerHTML = `
+        ${pkg.name === 'The Signature' ? '<div class="pkg-badge">Most Popular</div>' : ''}
+        <div class="pkg-name">${pkg.name}</div>
+        <div class="pkg-hours">${pkg.hours} hours</div>
+        <div class="pkg-price">${pkg.startingAt ? 'Starting at ' : ''}${fmtMoney(pkg.price)}${pkg.customQuote ? '<br><small>Custom quote required. Our team will contact you.</small>' : ''}</div>
+        <ul class="pkg-includes">${includes.map(i=>`<li>${i}</li>`).join('')}</ul>
+      `;
+      card.addEventListener('click', () => selectPackage({ type:'package', name:pkg.name, hours:pkg.hours, price:pkg.price, customQuote: !!pkg.customQuote, startingAt: !!pkg.startingAt }));
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+  }
+}
+
+function syncHourlySelection(){
+  if (state.package && state.package.type === 'hourly'){
+    state.package = { type:'hourly', name:'Hourly Rental', hours: state.hourlyHours, price: Math.max(state.hourlyHours*PRICING.weekday.ratePerHour, PRICING.weekday.minTotal) };
+    updateSummary();
+  }
+}
+
+function selectPackage(pkg){
+  state.package = pkg;
+  document.getElementById('next2').disabled = false;
+  renderPackages();
+  updateSummary();
+}
+
+// ---------- addons ----------
+function currentPackageName(){
+  return state.package ? state.package.name : null;
+}
+
+function renderAddons(){
+  const grid = document.getElementById('addonGrid');
+  grid.innerHTML = '';
+  const pkgName = currentPackageName();
+  const boothAvailable = state.selectedDayData ? state.selectedDayData.boothAvailable !== false : true;
+
+  PRICING.addons.forEach(addon => {
+    const s = state.addons[addon.name];
+    const included = addon.includedIn && pkgName && addon.includedIn.includes(pkgName);
+    const isBooth = addon.name.includes('Magazine Booth');
+    const boothLimited = isBooth && !boothAvailable;
+
+    const card = document.createElement('div');
+    card.className = 'addon-card';
+    if (included) card.classList.add('included');
+    else if (s.selected) card.classList.add('selected');
+    if (boothLimited) card.classList.add('dimmed');
+
+    let priceLabel = addon.customQuote ? 'Custom Quote' : (addon.perUnit ? `${fmtMoney(addon.price)}/ea` : fmtMoney(addon.price));
+    let bodyExtra = '';
+    if (included){
+      bodyExtra = '<div class="addon-included-tag">&#10003; Included in your package</div>';
+    } else if (addon.customQuote){
+      bodyExtra = '<div class="addon-desc">Our team will follow up on pricing.</div>';
+    }
+    if (boothLimited){
+      bodyExtra += '<div class="addon-warn">Magazine Booth may be unavailable for this date. Select it and our team will confirm.</div>';
+    }
+    let qtyHtml = '';
+    if (addon.perUnit && s.selected && !included){
+      qtyHtml = `<div class="addon-qty">
+        <button type="button" data-act="minus" data-name="${addon.name}">&minus;</button>
+        <span>${s.qty}</span>
+        <button type="button" data-act="plus" data-name="${addon.name}">+</button>
+        <span style="color:var(--muted);font-size:12px;">x ${fmtMoney(addon.price)}</span>
+      </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="addon-top">
+        <div>
+          <div class="addon-name">${addon.name}</div>
+          <div class="addon-desc">${ADDON_DESCRIPTIONS[addon.name] || ''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div class="addon-price">${priceLabel}</div>
+          <div class="addon-check">${(s.selected || included) ? '&#10003;' : ''}</div>
+        </div>
+      </div>
+      ${bodyExtra}
+      ${qtyHtml}
+    `;
+
+    if (!included){
+      card.addEventListener('click', (e) => {
+        if (e.target.dataset.act) return;
+        s.selected = !s.selected;
+        if (addon.perUnit && s.selected && !s.qty) s.qty = 1;
+        renderAddons();
+        updateSummary();
+      });
+    }
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const addon = PRICING.addons.find(a => a.name === btn.dataset.name);
+      const s = state.addons[addon.name];
+      if (btn.dataset.act === 'plus' && s.qty < addon.maxQty) s.qty++;
+      if (btn.dataset.act === 'minus' && s.qty > 1) s.qty--;
+      renderAddons();
+      updateSummary();
+    });
+  });
+}
+
+// ---------- pricing calc ----------
+function getSelectedAddons(){
+  const pkgName = currentPackageName();
+  const result = [];
+  PRICING.addons.forEach(addon => {
+    const s = state.addons[addon.name];
+    const included = addon.includedIn && pkgName && addon.includedIn.includes(pkgName);
+    if (included || !s.selected) return;
+    result.push({
+      name: addon.name,
+      qty: addon.perUnit ? s.qty : 1,
+      price: addon.customQuote ? 0 : addon.price * (addon.perUnit ? s.qty : 1),
+      customQuote: !!addon.customQuote
+    });
+  });
+  return result;
+}
+
+function calcSubtotal(){
+  let total = state.package ? (state.package.customQuote ? 0 : state.package.price) : 0;
+  getSelectedAddons().forEach(a => { total += a.price; });
+  return total;
+}
+
+function calcDeposit(){
+  if (!state.selectedDateStr) return { amount:0, label:'', balance:0 };
+  const eventDate = new Date(state.selectedDateStr + 'T00:00:00');
+  const today = new Date(MIN_YEAR, MIN_MONTH-1, 1); // fallback floor; real "today" below
+  const now = new Date();
+  const diffDays = Math.ceil((eventDate - now) / 86400000);
+  const subtotal = calcSubtotal();
+  if (diffDays >= 30){
+    return { amount: PRICING.deposit.moreThan30Days, label: `${fmtMoney(PRICING.deposit.moreThan30Days)} non-refundable deposit due today`, balance: Math.max(subtotal - PRICING.deposit.moreThan30Days, 0), full:false };
+  }
+  return { amount: subtotal, label: 'Full balance due — event is within 30 days', balance: 0, full:true };
+}
+
+// ---------- summary ----------
+function summaryHtml(){
+  if (!state.selectedDateStr) return '<div class="sum-empty">Select a date to get started.</div>';
+  let rows = '';
+  const [y,m,d] = state.selectedDateStr.split('-').map(Number);
+  rows += `<div class="sum-row"><span>Date</span><span>${MONTH_NAMES[m-1]} ${d}, ${y}</span></div>`;
+  if (state.package){
+    rows += `<div class="sum-row"><span>Package</span><span>${state.package.name} (${state.package.hours}hr)</span></div>`;
+  }
+  const addons = getSelectedAddons();
+  addons.forEach(a => {
+    rows += `<div class="sum-row"><span>${a.name}${a.qty>1?` x${a.qty}`:''}</span><span>${a.customQuote?'Quote':fmtMoney(a.price)}</span></div>`;
+  });
+  const subtotal = calcSubtotal();
+  const deposit = calcDeposit();
+  let html = rows;
+  html += `<div class="sum-total"><span>Subtotal</span><span class="amt">${fmtMoney(subtotal)}</span></div>`;
+  if (deposit.label) html += `<div class="sum-deposit">${deposit.label}</div>`;
+  return html;
+}
+
+function updateSummary(){
+  document.getElementById('summaryBody').innerHTML = summaryHtml();
+  document.getElementById('mobileBarBody').innerHTML = summaryHtml();
+  document.getElementById('mobileBarTotal').textContent = fmtMoney(calcSubtotal());
+}
+
+document.getElementById('mobileBarToggle').addEventListener('click', () => {
+  const body = document.getElementById('mobileBarBody');
+  const arrow = document.getElementById('mobileBarArrow');
+  body.classList.toggle('open');
+  arrow.innerHTML = body.classList.contains('open') ? 'Hide &#9660;' : 'View &#9650;';
+});
+
+// ---------- step navigation ----------
+function goToStep(n){
+  state.step = n;
+  document.querySelectorAll('.step').forEach(el => el.classList.remove('visible'));
+  document.querySelector(`.step[data-step="${n}"]`).classList.add('visible');
+  document.querySelectorAll('.progress-step').forEach(el => {
+    const s = Number(el.dataset.step);
+    el.classList.toggle('active', s === n);
+    el.classList.toggle('done', s < n);
+  });
+  const pct = ((n-1)/4)*100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('formLayout').style.display = n === 'confirm' ? 'none' : 'flex';
+  window.scrollTo({top:0, behavior:'smooth'});
+
+  if (n === 2) renderPackages();
+  if (n === 3) renderAddons();
+  if (n === 5) { renderReview(); runFinalCheck(); }
+}
+
+document.getElementById('next1').addEventListener('click', () => goToStep(2));
+document.getElementById('back2').addEventListener('click', () => goToStep(1));
+document.getElementById('next2').addEventListener('click', () => goToStep(3));
+document.getElementById('back3').addEventListener('click', () => goToStep(2));
+document.getElementById('next3').addEventListener('click', () => goToStep(4));
+document.getElementById('back4').addEventListener('click', () => goToStep(3));
+document.getElementById('back5').addEventListener('click', () => goToStep(4));
+
+// ---------- step 4 form ----------
+function populateStartTimes(){
+  const sel = document.getElementById('startTime');
+  sel.innerHTML = '<option value="">Select a time</option>';
+  for (let mins = 7*60; mins <= 23*60; mins += 30){
+    const opt = document.createElement('option');
+    opt.value = minutesToHHMM(mins);
+    opt.textContent = minutesToLabel(mins);
+    sel.appendChild(opt);
+  }
+}
+populateStartTimes();
+
+document.getElementById('eventType').addEventListener('change', (e) => {
+  document.getElementById('eventTypeOtherField').style.display = e.target.value === 'Other' ? 'block' : 'none';
+});
+
+function validateField(id, valid){
+  const field = document.querySelector(`[data-field="${id}"]`) || document.getElementById(id).closest('.field');
+  field.classList.toggle('invalid', !valid);
+  return valid;
+}
+
+function validateStep4(){
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName = document.getElementById('lastName').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.replace(/\D/g,'');
+  const eventType = document.getElementById('eventType').value;
+  const guestCount = Number(document.getElementById('guestCount').value);
+  const startTime = document.getElementById('startTime').value;
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const phoneValid = phone.length === 10;
+  const guestValid = guestCount >= 1 && guestCount <= 100;
+
+  let ok = true;
+  ok = validateField('firstName', firstName.length > 0) && ok;
+  ok = validateField('lastName', lastName.length > 0) && ok;
+  ok = validateField('email', emailValid) && ok;
+  ok = validateField('phone', phoneValid) && ok;
+  ok = validateField('eventType', eventType.length > 0) && ok;
+  ok = validateField('guestCount', guestValid) && ok;
+  ok = validateField('startTime', startTime.length > 0) && ok;
+
+  return ok;
+}
+
+document.getElementById('next4').addEventListener('click', () => {
+  if (!validateStep4()) return;
+  state.form = {
+    firstName: document.getElementById('firstName').value.trim(),
+    lastName: document.getElementById('lastName').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    phone: document.getElementById('phone').value.replace(/\D/g,''),
+    eventType: document.getElementById('eventType').value,
+    eventTypeOther: document.getElementById('eventTypeOther').value.trim(),
+    guestCount: Number(document.getElementById('guestCount').value),
+    startTime: document.getElementById('startTime').value,
+    hearAbout: document.getElementById('hearAbout').value,
+    additionalInfo: document.getElementById('additionalInfo').value.trim()
+  };
+  goToStep(5);
+});
+
+// ---------- step 5 review ----------
+function endTimeMinutes(){
+  const [h,m] = state.form.startTime.split(':').map(Number);
+  return h*60 + m + state.package.hours*60;
+}
+
+function renderReview(){
+  const [y,mo,d] = state.selectedDateStr.split('-').map(Number);
+  const startMins = (() => { const [h,m] = state.form.startTime.split(':').map(Number); return h*60+m; })();
+  const endMins = endTimeMinutes();
+  const subtotal = calcSubtotal();
+  const deposit = calcDeposit();
+  const addons = getSelectedAddons();
+  const customItems = addons.filter(a => a.customQuote);
+  const priced = addons.filter(a => !a.customQuote);
+
+  let html = `
+    <div class="rev-section">
+      <div class="rev-title">Event Details</div>
+      <div class="rev-row"><span>Date</span><span>${fmtLongDate(y,mo,d)}</span></div>
+      <div class="rev-row"><span>Pricing Tier</span><span>${tierLabel(state.pricingTier)}</span></div>
+      <div class="rev-row"><span>Package</span><span>${state.package.name} — ${state.package.hours} hrs</span></div>
+      <div class="rev-row"><span>Start / End Time</span><span>${minutesToLabel(startMins)} – ${minutesToLabel(endMins)}</span></div>
+      <div class="rev-row"><span>Guest Count</span><span>${state.form.guestCount}</span></div>
+      <div class="rev-row"><span>Event Type</span><span>${state.form.eventType === 'Other' ? state.form.eventTypeOther : state.form.eventType}</span></div>
+    </div>
+    <div class="rev-section">
+      <div class="rev-title">Add-Ons</div>
+      ${priced.length ? priced.map(a=>`<div class="rev-row"><span>${a.name}${a.qty>1?` x${a.qty}`:''}</span><span>${fmtMoney(a.price)}</span></div>`).join('') : '<div class="rev-row"><span>None selected</span><span></span></div>'}
+      ${customItems.length ? `<div class="rev-title" style="margin-top:14px;font-size:13px;color:var(--gold);">Custom Quote Items</div>` + customItems.map(a=>`<div class="rev-row"><span>${a.name}</span><span>Team will follow up</span></div>`).join('') : ''}
+    </div>
+    <div class="rev-section">
+      <div class="rev-total"><span>Subtotal</span><span class="amt">${fmtMoney(subtotal)}</span></div>
+      <div class="deposit-box">
+        <div class="line"><span>${deposit.full ? 'Balance Due Today' : 'Deposit Due Today'}</span><span>${fmtMoney(deposit.amount)}</span></div>
+        ${!deposit.full ? `<div class="line"><span>Balance Remaining</span><span>${fmtMoney(deposit.balance)}</span></div>` : ''}
+      </div>
+      <div class="hold-note">Your date will be tentatively held for 24 hours pending deposit payment.</div>
+    </div>
+  `;
+  document.getElementById('reviewContainer').innerHTML = html;
+}
+
+async function runFinalCheck(){
+  const msgEl = document.getElementById('finalCheckMsg');
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  msgEl.className = 'avail-msg checking';
+  msgEl.textContent = 'Checking final availability...';
+
+  const start = state.form.startTime;
+  const end = minutesToHHMM(endTimeMinutes());
+  try {
+    const res = await fetch(`${API_URL}?action=check&date=${state.selectedDateStr}&start=${start}&end=${end}`);
+    const data = await res.json();
+    state.finalCheck = { checked:true, venueAvailable: data.venueAvailable !== false, boothAvailable: data.boothAvailable !== false };
+  } catch(e){
+    console.error('Final availability check failed', e);
+    state.finalCheck = { checked:true, venueAvailable:true, boothAvailable:true };
+  }
+
+  const pkgHasBooth = state.package && PRICING.boothPackages.includes(state.package.name);
+
+  if (!state.finalCheck.venueAvailable){
+    msgEl.className = 'avail-msg bad';
+    msgEl.textContent = 'This date and time is no longer available. Please go back and select a new date.';
+    submitBtn.disabled = true;
+  } else if (!state.finalCheck.boothAvailable && pkgHasBooth){
+    msgEl.className = 'avail-msg warn';
+    msgEl.textContent = 'Our team will confirm your Magazine Booth inclusion.';
+    submitBtn.disabled = false;
+  } else {
+    msgEl.style.display = 'none';
+    submitBtn.disabled = false;
+  }
+}
+
+// ---------- submit ----------
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
+  const [y,mo,d] = state.selectedDateStr.split('-').map(Number);
+  const startMins = (() => { const [h,m] = state.form.startTime.split(':').map(Number); return h*60+m; })();
+  const endMins = endTimeMinutes();
+  const subtotal = calcSubtotal();
+  const deposit = calcDeposit();
+  const addons = getSelectedAddons();
+
+  const rentalLength = `${state.package.hours}HR`;
+  const opportunityName = `${state.selectedDateStr} — ${state.form.lastName} — ${state.package.name} ${rentalLength}`;
+
+  const payload = {
+    contact_first_name: state.form.firstName,
+    contact_last_name: state.form.lastName,
+    contact_email: state.form.email,
+    contact_phone: state.form.phone,
+    event_date: state.selectedDateStr,
+    event_day_of_week: DOW_NAMES[state.dayOfWeek],
+    event_start_time: minutesToHHMM(startMins),
+    event_end_time: minutesToHHMM(endMins),
+    event_rental_length: rentalLength,
+    event_package_selected: state.package.name,
+    event_type: state.form.eventType,
+    event_type_other: state.form.eventType === 'Other' ? state.form.eventTypeOther : '',
+    guest_count: state.form.guestCount,
+    addons_selected: addons.filter(a => !a.customQuote).map(a => ({ name:a.name, qty:a.qty, price:a.price })),
+    custom_quote_items: addons.filter(a => a.customQuote).map(a => a.name),
+    event_additional_info: state.form.additionalInfo,
+    monetary_value: subtotal,
+    event_deposit_amount: deposit.amount,
+    event_balance_remaining: deposit.balance,
+    event_deposit_paid: false,
+    opportunity_name: opportunityName,
+    opportunity_source: state.form.hearAbout,
+    form_submitted_at: new Date().toISOString()
+  };
+
+  let hadError = false;
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch(e){
+    console.error('Booking submission failed', e);
+    hadError = true;
+  }
+
+  document.getElementById('confirmDetails').innerHTML = `
+    <div class="rev-row"><span>Date</span><span>${fmtLongDate(y,mo,d)}</span></div>
+    <div class="rev-row"><span>Package</span><span>${state.package.name} — ${state.package.hours} hrs</span></div>
+    <div class="rev-row"><span>${deposit.full ? 'Balance Due' : 'Deposit Due'}</span><span>${fmtMoney(deposit.amount)}</span></div>
+  `;
+  document.getElementById('confirmErrNote').style.display = hadError ? 'block' : 'none';
+  goToStep('confirm');
+});
+
+// ---------- init ----------
+renderCalendar();
+updateSummary();
+goToStep(1);
+</script>
+</body>
+</html>
