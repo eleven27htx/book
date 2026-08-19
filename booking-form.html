@@ -383,9 +383,28 @@
     .form-grid{grid-template-columns:1fr;}
     .progress-step .label{display:none;}
   }
+
+  /* Landing screen */
+  .landing-cards{display:none;gap:24px;justify-content:center;flex-wrap:wrap;max-width:820px;margin:30px auto 0;}
+  body.landing .landing-cards{display:flex;}
+  body.landing .progress,
+  body.landing .layout,
+  body.landing .mobile-bar{display:none;}
+  .type-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:32px 28px;width:280px;cursor:pointer;text-align:center;transition:all .2s ease;
+  }
+  .type-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+  .type-card h3{font-size:22px;margin-bottom:10px;}
+  .type-card p{color:var(--muted);font-size:13.5px;line-height:1.6;margin:0;}
+  .change-type-link{
+    background:none;border:none;color:var(--muted);font-size:12px;letter-spacing:.4px;
+    text-transform:uppercase;cursor:pointer;padding:0;margin-bottom:18px;font-family:'Montserrat',sans-serif;
+  }
+  .change-type-link:hover{color:var(--gold);}
 </style>
 </head>
-<body>
+<body class="landing">
 
 <div class="wrap">
   <div class="header">
@@ -393,13 +412,20 @@
     <div class="tagline">Elevated Events. Affordable Luxury.</div>
   </div>
 
+  <div class="landing-cards" id="landingScreen">
+    <div class="type-card" data-type="venue">
+      <h3>Venue Rental</h3>
+      <p>Book our full event space for your celebration, complete with packages tailored to your date.</p>
+    </div>
+    <div class="type-card" data-type="booth">
+      <h3>Magazine Booth Rental Only</h3>
+      <p>Just need the photo experience? Reserve the Magazine Booth on its own.</p>
+    </div>
+  </div>
+
   <div class="progress" id="progressBar">
     <div class="progress-fill" id="progressFill" style="width:0%"></div>
-    <div class="progress-step" data-step="1"><div class="dot">1</div><div class="label">Date</div></div>
-    <div class="progress-step" data-step="2"><div class="dot">2</div><div class="label">Package</div></div>
-    <div class="progress-step" data-step="3"><div class="dot">3</div><div class="label">Add-Ons</div></div>
-    <div class="progress-step" data-step="4"><div class="dot">4</div><div class="label">Your Info</div></div>
-    <div class="progress-step" data-step="5"><div class="dot">5</div><div class="label">Review</div></div>
+    <div id="progressSteps" style="display:contents;"></div>
   </div>
 
   <div class="layout" id="formLayout">
@@ -408,6 +434,7 @@
 
         <!-- STEP 1 -->
         <div class="step" data-step="1">
+          <button type="button" class="change-type-link" id="changeBookingType">&#8592; Change Booking Type</button>
           <h2>Select Your Date</h2>
           <div class="step-sub">Choose an available date for your event.</div>
           <div class="cal-nav">
@@ -697,7 +724,17 @@ const MIN_YEAR = 2026, MIN_MONTH = 10; // October 2026
 const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+// Booth-only bookings have no duration selection in this flow — used only to
+// form a valid start/end window for the availability check API call.
+const BOOTH_ONLY_HOURS = 1;
+
+const STEP_DEFS = {
+  venue: [ {step:1,label:'Date'}, {step:2,label:'Package'}, {step:3,label:'Add-Ons'}, {step:4,label:'Your Info'}, {step:5,label:'Review'} ],
+  booth: [ {step:1,label:'Date'}, {step:4,label:'Your Info'}, {step:5,label:'Review'} ]
+};
+
 const state = {
+  bookingType: null, // 'venue' | 'booth'
   currentYear: MIN_YEAR,
   currentMonth: MIN_MONTH,
   monthCache: {},
@@ -802,11 +839,11 @@ async function renderCalendar(){
     const key = dateKey(state.currentYear, state.currentMonth, d);
     const info = availability[key];
     const isPast = thisDate < todayFloor;
-    const isAvailable = info ? info.venueAvailable !== false : true;
+    const availField = state.bookingType === 'booth' ? 'boothAvailable' : 'venueAvailable';
 
     if (isPast){
       el.classList.add('past');
-    } else if (info && info.venueAvailable === false){
+    } else if (info && info[availField] === false){
       el.classList.add('unavailable');
       el.title = 'Unavailable';
     } else {
@@ -825,14 +862,16 @@ function selectDate(y, m, d, info){
   const dow = new Date(y, m-1, d).getDay();
   state.dayOfWeek = dow;
   state.pricingTier = tierForDow(dow);
-  state.package = null;
+  if (state.bookingType === 'venue') state.package = null;
   state.hourlyHours = PRICING.weekday.minHours;
   state.finalCheck = { checked:false, venueAvailable:true, boothAvailable:true };
 
   renderCalendar();
   const box = document.getElementById('selectedDateInfo');
   box.style.display = 'block';
-  box.innerHTML = `<div class="d1">${fmtLongDate(y,m,d)}</div><div class="d2">${tierLabel(state.pricingTier)}</div>`;
+  box.innerHTML = state.bookingType === 'booth'
+    ? `<div class="d1">${fmtLongDate(y,m,d)}</div>`
+    : `<div class="d1">${fmtLongDate(y,m,d)}</div><div class="d2">${tierLabel(state.pricingTier)}</div>`;
   document.getElementById('next1').disabled = false;
   updateSummary();
 }
@@ -1060,7 +1099,8 @@ function summaryHtml(){
   const [y,m,d] = state.selectedDateStr.split('-').map(Number);
   rows += `<div class="sum-row"><span>Date</span><span>${MONTH_NAMES[m-1]} ${d}, ${y}</span></div>`;
   if (state.package){
-    rows += `<div class="sum-row"><span>Package</span><span>${state.package.name} (${state.package.hours}hr)</span></div>`;
+    const isBooth = state.bookingType === 'booth';
+    rows += `<div class="sum-row"><span>${isBooth ? 'Booking' : 'Package'}</span><span>${state.package.name}${isBooth ? '' : ` (${state.package.hours}hr)`}</span></div>`;
   }
   const addons = getSelectedAddons();
   addons.forEach(a => {
@@ -1087,18 +1127,62 @@ document.getElementById('mobileBarToggle').addEventListener('click', () => {
   arrow.innerHTML = body.classList.contains('open') ? 'Hide &#9660;' : 'View &#9650;';
 });
 
+// ---------- booking type / landing ----------
+function renderProgressBar(){
+  const defs = STEP_DEFS[state.bookingType] || STEP_DEFS.venue;
+  document.getElementById('progressSteps').innerHTML = defs.map((d,i) => `
+    <div class="progress-step" data-step="${d.step}"><div class="dot">${i+1}</div><div class="label">${d.label}</div></div>
+  `).join('');
+}
+
+function showLanding(){
+  document.body.classList.add('landing');
+}
+
+function resetToLanding(){
+  state.bookingType = null;
+  state.selectedDateStr = null;
+  state.selectedDayData = null;
+  state.package = null;
+  document.getElementById('selectedDateInfo').style.display = 'none';
+  document.getElementById('next1').disabled = true;
+  document.getElementById('formLayout').style.display = 'none';
+  renderCalendar();
+  updateSummary();
+  showLanding();
+}
+
+document.querySelectorAll('.type-card').forEach(card => {
+  card.addEventListener('click', () => {
+    state.bookingType = card.dataset.type;
+    state.package = state.bookingType === 'booth'
+      ? { type:'booth', name:'Magazine Booth Rental', hours: BOOTH_ONLY_HOURS, price:0, customQuote:true }
+      : null;
+    document.body.classList.remove('landing');
+    renderProgressBar();
+    renderCalendar();
+    goToStep(1);
+  });
+});
+
+document.getElementById('changeBookingType').addEventListener('click', resetToLanding);
+
 // ---------- step navigation ----------
 function goToStep(n){
   state.step = n;
   document.querySelectorAll('.step').forEach(el => el.classList.remove('visible'));
   document.querySelector(`.step[data-step="${n}"]`).classList.add('visible');
+
+  const defs = STEP_DEFS[state.bookingType] || STEP_DEFS.venue;
+  const idx = defs.findIndex(d => d.step === n);
+  const pct = n === 'confirm' ? 100 : (idx >= 0 ? (idx/(defs.length-1))*100 : 0);
+  document.getElementById('progressFill').style.width = pct + '%';
   document.querySelectorAll('.progress-step').forEach(el => {
     const s = Number(el.dataset.step);
+    const elIdx = defs.findIndex(d => d.step === s);
     el.classList.toggle('active', s === n);
-    el.classList.toggle('done', s < n);
+    el.classList.toggle('done', n === 'confirm' || (elIdx >= 0 && idx >= 0 && elIdx < idx));
   });
-  const pct = ((n-1)/4)*100;
-  document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('formLayout').style.display = n === 'confirm' ? 'none' : 'flex';
   window.scrollTo({top:0, behavior:'smooth'});
 
@@ -1107,12 +1191,12 @@ function goToStep(n){
   if (n === 5) { renderReview(); runFinalCheck(); }
 }
 
-document.getElementById('next1').addEventListener('click', () => goToStep(2));
+document.getElementById('next1').addEventListener('click', () => goToStep(state.bookingType === 'booth' ? 4 : 2));
 document.getElementById('back2').addEventListener('click', () => goToStep(1));
 document.getElementById('next2').addEventListener('click', () => goToStep(3));
 document.getElementById('back3').addEventListener('click', () => goToStep(2));
 document.getElementById('next3').addEventListener('click', () => goToStep(4));
-document.getElementById('back4').addEventListener('click', () => goToStep(3));
+document.getElementById('back4').addEventListener('click', () => goToStep(state.bookingType === 'booth' ? 1 : 3));
 document.getElementById('back5').addEventListener('click', () => goToStep(4));
 
 // ---------- step 4 form ----------
@@ -1195,22 +1279,25 @@ function renderReview(){
   const addons = getSelectedAddons();
   const customItems = addons.filter(a => a.customQuote);
   const priced = addons.filter(a => !a.customQuote);
+  const isBooth = state.bookingType === 'booth';
 
   let html = `
     <div class="rev-section">
       <div class="rev-title">Event Details</div>
       <div class="rev-row"><span>Date</span><span>${fmtLongDate(y,mo,d)}</span></div>
-      <div class="rev-row"><span>Pricing Tier</span><span>${tierLabel(state.pricingTier)}</span></div>
-      <div class="rev-row"><span>Package</span><span>${state.package.name} — ${state.package.hours} hrs</span></div>
-      <div class="rev-row"><span>Start / End Time</span><span>${minutesToLabel(startMins)} – ${minutesToLabel(endMins)}</span></div>
+      ${isBooth ? '' : `<div class="rev-row"><span>Pricing Tier</span><span>${tierLabel(state.pricingTier)}</span></div>`}
+      <div class="rev-row"><span>${isBooth ? 'Booking Type' : 'Package'}</span><span>${isBooth ? state.package.name : `${state.package.name} — ${state.package.hours} hrs`}</span></div>
+      ${isBooth
+        ? `<div class="rev-row"><span>Preferred Time</span><span>${minutesToLabel(startMins)}</span></div>`
+        : `<div class="rev-row"><span>Start / End Time</span><span>${minutesToLabel(startMins)} – ${minutesToLabel(endMins)}</span></div>`}
       <div class="rev-row"><span>Guest Count</span><span>${state.form.guestCount}</span></div>
       <div class="rev-row"><span>Event Type</span><span>${state.form.eventType === 'Other' ? state.form.eventTypeOther : state.form.eventType}</span></div>
     </div>
-    <div class="rev-section">
+    ${isBooth ? '' : `<div class="rev-section">
       <div class="rev-title">Add-Ons</div>
       ${priced.length ? priced.map(a=>`<div class="rev-row"><span>${a.name}${a.qty>1?` x${a.qty}`:''}</span><span>${fmtMoney(a.price)}</span></div>`).join('') : '<div class="rev-row"><span>None selected</span><span></span></div>'}
       ${customItems.length ? `<div class="rev-title" style="margin-top:14px;font-size:13px;color:var(--gold);">Custom Quote Items</div>` + customItems.map(a=>`<div class="rev-row"><span>${a.name}</span><span>Team will follow up</span></div>`).join('') : ''}
-    </div>
+    </div>`}
     <div class="rev-section">
       <div class="rev-total"><span>Subtotal</span><span class="amt">${fmtMoney(subtotal)}</span></div>
       <div class="deposit-box">
@@ -1239,6 +1326,18 @@ async function runFinalCheck(){
   } catch(e){
     console.error('Final availability check failed', e);
     state.finalCheck = { checked:true, venueAvailable:true, boothAvailable:true };
+  }
+
+  if (state.bookingType === 'booth'){
+    if (!state.finalCheck.boothAvailable){
+      msgEl.className = 'avail-msg bad';
+      msgEl.textContent = 'This date is no longer available for the Magazine Booth. Please go back and select a new date.';
+      submitBtn.disabled = true;
+    } else {
+      msgEl.style.display = 'none';
+      submitBtn.disabled = false;
+    }
+    return;
   }
 
   const pkgHasBooth = state.package && PRICING.boothPackages.includes(state.package.name);
@@ -1274,6 +1373,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const opportunityName = `${state.selectedDateStr} — ${state.form.lastName} — ${state.package.name} ${rentalLength}`;
 
   const payload = {
+    booking_type: state.bookingType === 'booth' ? 'booth_only' : 'venue',
     contact_first_name: state.form.firstName,
     contact_last_name: state.form.lastName,
     contact_email: state.form.email,
@@ -1311,9 +1411,10 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     hadError = true;
   }
 
+  const isBooth = state.bookingType === 'booth';
   document.getElementById('confirmDetails').innerHTML = `
     <div class="rev-row"><span>Date</span><span>${fmtLongDate(y,mo,d)}</span></div>
-    <div class="rev-row"><span>Package</span><span>${state.package.name} — ${state.package.hours} hrs</span></div>
+    <div class="rev-row"><span>${isBooth ? 'Booking Type' : 'Package'}</span><span>${isBooth ? state.package.name : `${state.package.name} — ${state.package.hours} hrs`}</span></div>
     <div class="rev-row"><span>${deposit.full ? 'Balance Due' : 'Deposit Due'}</span><span>${fmtMoney(deposit.amount)}</span></div>
   `;
   document.getElementById('confirmErrNote').style.display = hadError ? 'block' : 'none';
@@ -1323,7 +1424,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 // ---------- init ----------
 renderCalendar();
 updateSummary();
-goToStep(1);
+showLanding();
 </script>
 </body>
 </html>
