@@ -460,9 +460,26 @@
     <div class="main-col">
       <div class="card form-wrap">
 
+        <!-- BOOTH SELECT (Magazine Booth Only flow) -->
+        <div class="step" data-step="boothSelect">
+          <button type="button" class="change-type-link" id="changeBookingTypeFromBooth">&#8592; Change Booking Type</button>
+          <h2>Select Your Booth</h2>
+          <div class="step-sub">Choose which Magazine Booth you'd like to reserve.</div>
+          <div class="pkg-grid" id="boothTypeContainer"></div>
+          <label class="field" style="display:flex;align-items:center;gap:10px;flex-direction:row;margin-top:20px;">
+            <input type="checkbox" id="outsideDeliveryArea" style="width:auto;">
+            <span style="font-size:13px;color:var(--muted);text-transform:none;">My event is outside 30 minutes of Spring, TX 77373 (+$75 delivery fee)</span>
+          </label>
+          <div class="btn-row">
+            <div></div>
+            <button class="btn btn-primary" id="nextBoothSelect" disabled>Next</button>
+          </div>
+        </div>
+
         <!-- STEP 1 -->
         <div class="step" data-step="1">
           <button type="button" class="change-type-link" id="changeBookingType">&#8592; Change Booking Type</button>
+          <button type="button" class="change-type-link" id="backToBoothSelect" style="display:none;">&#8592; Back to Booth Selection</button>
           <h2>Select Your Date</h2>
           <div class="step-sub">Choose an available date for your event.</div>
           <div class="cal-nav">
@@ -689,7 +706,25 @@ const PRICING = {
     lessThan30Days: 'full'
   },
   additionalHourRate: 150,
-  boothPackages: ['The Social', 'The Signature']
+  boothPackages: ['The Social', 'The Signature'],
+  booth: {
+    mini: {
+      name: 'Mini Magazine Booth',
+      price: 350,
+      description: 'Includes delivery, setup, pickup, and custom wording with black or white front cover. Full day rental.',
+      deliveryNote: 'Delivery included within 30 minutes of Spring, TX 77373. Outside delivery area adds $75.',
+      requiresOutlet: true
+    },
+    fullSize: {
+      name: 'Full Size Magazine Booth',
+      price: 550,
+      description: 'Includes delivery, setup, pickup, and custom wording with black or white front cover. Full day rental.',
+      deliveryNote: 'Delivery included within 30 minutes of Spring, TX 77373. Outside delivery area adds $75.',
+      requiresOutlet: true
+    },
+    outsideDeliveryFee: 75,
+    depositPercent: 0.50
+  }
 };
 // ============================================================
 
@@ -760,11 +795,13 @@ const BOOTH_ONLY_HOURS = 1;
 
 const STEP_DEFS = {
   venue: [ {step:1,label:'Date'}, {step:2,label:'Package'}, {step:3,label:'Add-Ons'}, {step:4,label:'Your Info'}, {step:5,label:'Review'} ],
-  booth: [ {step:1,label:'Date'}, {step:4,label:'Your Info'}, {step:5,label:'Review'} ]
+  booth: [ {step:'boothSelect',label:'Booth'}, {step:1,label:'Date'}, {step:4,label:'Your Info'}, {step:5,label:'Review'} ]
 };
 
 const state = {
   bookingType: null, // 'venue' | 'booth'
+  boothType: null, // 'mini' | 'fullSize'
+  outsideDeliveryArea: false,
   currentYear: MIN_YEAR,
   currentMonth: MIN_MONTH,
   monthCache: {},
@@ -1107,9 +1144,14 @@ function getSelectedAddons(){
   return result;
 }
 
+function deliveryFee(){
+  return (state.bookingType === 'booth' && state.outsideDeliveryArea) ? PRICING.booth.outsideDeliveryFee : 0;
+}
+
 function calcSubtotal(){
   let total = state.package ? (state.package.customQuote ? 0 : state.package.price) : 0;
   getSelectedAddons().forEach(a => { total += a.price; });
+  total += deliveryFee();
   return total;
 }
 
@@ -1122,7 +1164,7 @@ function calcDeposit(){
 
   if (diffDays >= 30){
     const amount = state.bookingType === 'booth'
-      ? Math.ceil(subtotal * 0.5)
+      ? Math.ceil(subtotal * PRICING.booth.depositPercent)
       : Math.min(PRICING.deposit.moreThan30Days, subtotal);
     return { amount, label: `${fmtMoney(amount)} non-refundable deposit due today`, balance: Math.max(subtotal - amount, 0), full:false };
   }
@@ -1138,6 +1180,9 @@ function summaryHtml(){
   if (state.package){
     const isBooth = state.bookingType === 'booth';
     rows += `<div class="sum-row"><span>${isBooth ? 'Booking' : 'Package'}</span><span>${state.package.name}${isBooth ? '' : ` (${state.package.hours}hr)`}</span></div>`;
+    if (isBooth && state.outsideDeliveryArea){
+      rows += `<div class="sum-row"><span>Outside Delivery Fee</span><span>${fmtMoney(deliveryFee())}</span></div>`;
+    }
   }
   const addons = getSelectedAddons();
   addons.forEach(a => {
@@ -1178,27 +1223,80 @@ function showLanding(){
 
 function resetToLanding(){
   state.bookingType = null;
+  state.boothType = null;
+  state.outsideDeliveryArea = false;
   state.selectedDateStr = null;
   state.selectedDayData = null;
   state.package = null;
   document.getElementById('selectedDateInfo').style.display = 'none';
   document.getElementById('next1').disabled = true;
+  document.getElementById('outsideDeliveryArea').checked = false;
+  document.getElementById('nextBoothSelect').disabled = true;
   document.getElementById('formLayout').style.display = 'none';
   renderCalendar();
   updateSummary();
   showLanding();
 }
 
+// ---------- Magazine Booth type selection ----------
+function renderBoothOptions(){
+  const container = document.getElementById('boothTypeContainer');
+  container.innerHTML = '';
+  const commonIncludes = [
+    'Includes delivery, setup, and pickup',
+    'Custom wording with black or white front cover',
+    `Delivery included within 30 minutes of Spring, TX 77373 (outside area adds ${fmtMoney(PRICING.booth.outsideDeliveryFee)})`,
+    'An electrical outlet is required at your venue'
+  ];
+  const options = [
+    { key: 'mini', cfg: PRICING.booth.mini, extra: ['Photography services not included'] },
+    { key: 'fullSize', cfg: PRICING.booth.fullSize, extra: ['Larger format for greater visual impact', 'Photography services not included'] }
+  ];
+  options.forEach(opt => {
+    const card = document.createElement('div');
+    card.className = 'pkg-card' + (state.boothType === opt.key ? ' selected' : '');
+    card.innerHTML = `
+      <div class="pkg-name">${opt.cfg.name}</div>
+      <div class="pkg-price">${fmtMoney(opt.cfg.price)}</div>
+      <ul class="pkg-includes">${commonIncludes.concat(opt.extra).map(i=>`<li>${i}</li>`).join('')}</ul>
+    `;
+    card.addEventListener('click', () => {
+      state.boothType = opt.key;
+      state.package = { type:'booth', name: opt.cfg.name, hours: BOOTH_ONLY_HOURS, price: opt.cfg.price, customQuote:false };
+      document.getElementById('nextBoothSelect').disabled = false;
+      renderBoothOptions();
+      updateSummary();
+    });
+    container.appendChild(card);
+  });
+}
+
+document.getElementById('outsideDeliveryArea').addEventListener('change', (e) => {
+  state.outsideDeliveryArea = e.target.checked;
+  updateSummary();
+});
+
+document.getElementById('nextBoothSelect').addEventListener('click', () => goToStep(1));
+document.getElementById('changeBookingTypeFromBooth').addEventListener('click', resetToLanding);
+document.getElementById('backToBoothSelect').addEventListener('click', () => goToStep('boothSelect'));
+
 document.querySelectorAll('.type-card').forEach(card => {
   card.addEventListener('click', () => {
     state.bookingType = card.dataset.type;
-    state.package = state.bookingType === 'booth'
-      ? { type:'booth', name:'Magazine Booth Rental', hours: BOOTH_ONLY_HOURS, price:0, customQuote:true }
-      : null;
+    state.boothType = null;
+    state.outsideDeliveryArea = false;
+    document.getElementById('outsideDeliveryArea').checked = false;
+    document.getElementById('nextBoothSelect').disabled = true;
+    state.package = null;
     document.body.classList.remove('landing');
     renderProgressBar();
     renderCalendar();
-    goToStep(1);
+    if (state.bookingType === 'booth'){
+      renderBoothOptions();
+      goToStep('boothSelect');
+    } else {
+      goToStep(1);
+    }
   });
 });
 
@@ -1215,14 +1313,18 @@ function goToStep(n){
   const pct = n === 'confirm' ? 100 : (idx >= 0 ? (idx/(defs.length-1))*100 : 0);
   document.getElementById('progressFill').style.width = pct + '%';
   document.querySelectorAll('.progress-step').forEach(el => {
-    const s = Number(el.dataset.step);
-    const elIdx = defs.findIndex(d => d.step === s);
-    el.classList.toggle('active', s === n);
+    const s = el.dataset.step; // always a string, may be numeric ("1") or a name ("boothSelect")
+    const elIdx = defs.findIndex(d => String(d.step) === s);
+    el.classList.toggle('active', s === String(n));
     el.classList.toggle('done', n === 'confirm' || (elIdx >= 0 && idx >= 0 && elIdx < idx));
   });
   document.getElementById('formLayout').style.display = n === 'confirm' ? 'none' : 'flex';
   window.scrollTo({top:0, behavior:'smooth'});
 
+  if (n === 1){
+    document.getElementById('changeBookingType').style.display = state.bookingType === 'booth' ? 'none' : '';
+    document.getElementById('backToBoothSelect').style.display = state.bookingType === 'booth' ? '' : 'none';
+  }
   if (n === 2) renderPackages();
   if (n === 3) renderAddons();
   if (n === 4) populateStartTimes();
@@ -1363,7 +1465,8 @@ function renderReview(){
       <div class="rev-title">Event Details</div>
       <div class="rev-row"><span>Date</span><span>${fmtLongDate(y,mo,d)}</span></div>
       ${isBooth ? '' : `<div class="rev-row"><span>Pricing Tier</span><span>${tierLabel(state.pricingTier)}</span></div>`}
-      <div class="rev-row"><span>${isBooth ? 'Booking Type' : 'Package'}</span><span>${isBooth ? state.package.name : `${state.package.name} — ${state.package.hours} hrs`}</span></div>
+      <div class="rev-row"><span>${isBooth ? 'Booking Type' : 'Package'}</span><span>${isBooth ? `${state.package.name} — ${fmtMoney(state.package.price)}` : `${state.package.name} — ${state.package.hours} hrs`}</span></div>
+      ${isBooth && state.outsideDeliveryArea ? `<div class="rev-row"><span>Outside Delivery Area Fee</span><span>${fmtMoney(deliveryFee())}</span></div>` : ''}
       ${isBooth
         ? `<div class="rev-row"><span>Preferred Time</span><span>${minutesToLabel(startMins)}</span></div>`
         : `<div class="rev-row"><span>Start / End Time</span><span>${minutesToLabel(startMins)} – ${minutesToLabel(endMins)}</span></div>`}
@@ -1378,8 +1481,10 @@ function renderReview(){
     <div class="rev-section">
       <div class="rev-total"><span>Subtotal</span><span class="amt">${fmtMoney(subtotal)}</span></div>
       <div class="deposit-box">
-        <div class="line"><span>${deposit.full ? 'Balance Due Today' : 'Deposit Due Today'}</span><span>${fmtMoney(deposit.amount)}</span></div>
-        ${!deposit.full ? `<div class="line"><span>Balance Remaining</span><span>${fmtMoney(deposit.balance)}</span></div>` : ''}
+        <div class="line"><span>${isBooth
+          ? (deposit.full ? 'Full Balance Due Today' : '50% Deposit Due Today')
+          : (deposit.full ? 'Balance Due Today' : 'Deposit Due Today')}</span><span>${fmtMoney(deposit.amount)}</span></div>
+        ${!deposit.full ? `<div class="line"><span>${isBooth ? 'Balance Due Prior To Setup' : 'Balance Remaining'}</span><span>${fmtMoney(deposit.balance)}</span></div>` : ''}
       </div>
       <div class="hold-note">Your date will be tentatively held for 24 hours pending deposit payment.</div>
     </div>
@@ -1396,8 +1501,9 @@ async function runFinalCheck(){
 
   const start = state.form.startTime;
   const end = minutesToHHMM(endTimeMinutes());
+  const boothTypeParam = state.bookingType === 'booth' && state.boothType ? `&boothType=${state.boothType}` : '';
   try {
-    const res = await fetch(`${API_URL}?action=check&date=${state.selectedDateStr}&start=${start}&end=${end}`);
+    const res = await fetch(`${API_URL}?action=check&date=${state.selectedDateStr}&start=${start}&end=${end}${boothTypeParam}`);
     const data = await res.json();
     state.finalCheck = { checked:true, venueAvailable: data.venueAvailable !== false, boothAvailable: data.boothAvailable !== false };
   } catch(e){
@@ -1473,7 +1579,11 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     event_deposit_paid: false,
     opportunity_name: opportunityName,
     opportunity_source: state.form.hearAbout,
-    form_submitted_at: new Date().toISOString()
+    form_submitted_at: new Date().toISOString(),
+    booth_type: state.bookingType === 'booth' ? (state.boothType === 'fullSize' ? 'full_size' : 'mini') : '',
+    outside_delivery_area: state.bookingType === 'booth' ? state.outsideDeliveryArea : false,
+    delivery_fee: deliveryFee(),
+    balance_due_prior_to_setup: state.bookingType === 'booth'
   };
 
   let hadError = false;
