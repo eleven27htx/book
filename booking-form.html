@@ -810,7 +810,7 @@ const PACKAGE_INCLUDES = {
 };
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbwb9kvoU0lQSNDiRt6NLJlXKZ9Y3k1kKh7Qe5KIMUaICDYONQXpKJCfI7mg2uPvVkihIg/exec';
-const WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/guejretBwEsF0yB7fx0k/webhook-trigger/7ff1caec-c06e-4e25-bc69-035ef3a38c54';
+const WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/guejretBwEsF0yB7fx0k/webhook-trigger/adb6a10c-816a-4a8d-b241-d6b71dd2e561';
 const MIN_YEAR = 2026, MIN_MONTH = 10; // October 2026
 const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -1594,7 +1594,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const addons = getSelectedAddons();
 
   const rentalLength = `${state.package.hours}HR`;
-  const opportunityName = `${state.selectedDateStr} — ${state.form.lastName} — ${state.package.name} ${rentalLength}`;
+  const opportunityName = `${state.selectedDateStr} — ${state.form.lastName} — ${state.package.name}`;
 
   const selectedAddons = addons.map(a => a.name);
   const addonQty = {};
@@ -1602,60 +1602,55 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 
   const payload = {
     booking_type: state.bookingType === 'booth' ? 'booth_only' : 'venue',
-    contact_first_name: state.form.firstName,
-    contact_last_name: state.form.lastName,
-    contact_email: state.form.email,
-    contact_phone: state.form.phone,
+    first_name: state.form.firstName,
+    last_name: state.form.lastName,
+    email: state.form.email,
+    phone: state.form.phone,
+    customer_name: `${state.form.firstName} ${state.form.lastName}`,
+    customer_email: state.form.email,
+    customer_phone: state.form.phone,
     event_date: state.selectedDateStr,
-    event_day_of_week: DOW_NAMES[state.dayOfWeek],
-    event_start_time: minutesToHHMM(startMins),
-    event_end_time: minutesToHHMM(endMins),
-    event_rental_length: rentalLength,
-    event_package_selected: state.package.name,
+    event_day: DOW_NAMES[state.dayOfWeek],
+    start_time: minutesToHHMM(startMins),
+    end_time: minutesToHHMM(endMins),
+    rental_length: rentalLength,
+    package: state.package.name,
     event_type: state.form.eventType,
     event_type_other: state.form.eventType === 'Other' ? state.form.eventTypeOther : '',
-    guest_count: state.form.guestCount,
-    event_addon_post_event_cleaning: selectedAddons.includes('Post Event Cleaning') ? 'Yes' : 'No',
-    event_addon_mini_magazine_booth: selectedAddons.includes('Mini Magazine Booth') ? 'Yes' : 'No',
-    event_addon_full_size_magazine_booth: selectedAddons.includes('Full Size Magazine Booth') ? 'Yes' : 'No',
-    event_addon_chafing_dish: selectedAddons.includes('Chafing Dish Package') ? 'Yes' : 'No',
-    event_addon_bartender_requested: selectedAddons.includes('Bartender') ? 'Yes' : 'No',
-    event_addon_security_requested: selectedAddons.includes('Security') ? 'Yes' : 'No',
-    event_addon_event_planning_requested: selectedAddons.includes('Event Planning') ? 'Yes' : 'No',
-    event_addon_event_coordination_requested: selectedAddons.includes('Event Coordination') ? 'Yes' : 'No',
-    event_addon_decor_package_requested: selectedAddons.includes('Decor Package') ? 'Yes' : 'No',
-    event_addon_catering_requested: selectedAddons.includes('Catering') ? 'Yes' : 'No',
-    event_addon_dj_requested: selectedAddons.includes('DJ') ? 'Yes' : 'No',
-    event_addon_photography_requested: selectedAddons.includes('Photography') ? 'Yes' : 'No',
-    event_addon_videography_requested: selectedAddons.includes('Videography') ? 'Yes' : 'No',
-    event_addon_cocktail_tables_qty: addonQty['Cocktail Tables'] || 0,
-    event_addon_marquee_qty: addonQty['Marquee Letters/Numbers'] || 0,
-    event_addon_black_linen_qty: addonQty['Black Linen'] || 0,
-    event_addon_white_linen_qty: addonQty['White Linen'] || 0,
-    event_addon_additional_hours_qty: addonQty['Additional Hour'] || 0,
-    custom_quote_items: addons.filter(a => a.customQuote).map(a => a.name),
-    event_additional_info: state.form.additionalInfo,
-    monetary_value: subtotal,
-    event_deposit_amount: deposit.amount,
-    event_balance_remaining: deposit.balance,
-    event_deposit_paid: false,
-    opportunity_name: opportunityName,
-    opportunity_source: state.form.hearAbout,
-    form_submitted_at: new Date().toISOString(),
+    guests: state.form.guestCount,
+    notes: state.form.additionalInfo,
+    total: subtotal,
+    deposit: deposit.amount,
+    balance: deposit.balance,
+    deposit_paid: 'No',
+    opp_name: opportunityName,
+    source: state.form.hearAbout,
+    submitted_at: new Date().toISOString(),
+    sub_id: Date.now().toString(),
+    quotes: addons.filter(a => a.customQuote).map(a => a.name).join(', '),
     booth_type: state.bookingType === 'booth' ? (state.boothType === 'fullSize' ? 'full_size' : 'mini') : '',
-    outside_delivery_area: state.bookingType === 'booth' ? state.outsideDeliveryArea : false,
-    delivery_fee: deliveryFee(),
-    balance_due_prior_to_setup: state.bookingType === 'booth',
-    ...(state.bookingType === 'booth' ? {
-      event_address: state.form.eventAddress,
-      custom_wording_request: state.form.customWordingRequest,
-      cover_color_preference: state.form.coverColorPreference,
-      travel_fee_review_status: state.outsideDeliveryArea ? 'outside_area' : 'within_area',
-      selected_booth_or_addon: state.boothType === 'fullSize' ? 'full_size' : 'mini',
-      customer_name: `${state.form.firstName} ${state.form.lastName}`,
-      customer_email: state.form.email,
-      customer_phone: state.form.phone
-    } : {})
+    event_address: state.form.eventAddress,
+    wording: state.form.customWordingRequest,
+    cover_color: state.form.coverColorPreference,
+    delivery_status: state.bookingType === 'booth' ? (state.outsideDeliveryArea ? 'outside_area' : 'within_area') : '',
+    cleaning: selectedAddons.includes('Post Event Cleaning') ? 'Yes' : 'No',
+    mini_booth: selectedAddons.includes('Mini Magazine Booth') ? 'Yes' : 'No',
+    full_booth: selectedAddons.includes('Full Size Magazine Booth') ? 'Yes' : 'No',
+    chafing: selectedAddons.includes('Chafing Dish Package') ? 'Yes' : 'No',
+    bartender: selectedAddons.includes('Bartender') ? 'Yes' : 'No',
+    security: selectedAddons.includes('Security') ? 'Yes' : 'No',
+    planning: selectedAddons.includes('Event Planning') ? 'Yes' : 'No',
+    coordination: selectedAddons.includes('Event Coordination') ? 'Yes' : 'No',
+    decor: selectedAddons.includes('Decor Package') ? 'Yes' : 'No',
+    catering: selectedAddons.includes('Catering') ? 'Yes' : 'No',
+    dj: selectedAddons.includes('DJ') ? 'Yes' : 'No',
+    photography: selectedAddons.includes('Photography') ? 'Yes' : 'No',
+    videography: selectedAddons.includes('Videography') ? 'Yes' : 'No',
+    cocktail_qty: addonQty['Cocktail Tables'] || 0,
+    marquee_qty: addonQty['Marquee Letters/Numbers'] || 0,
+    black_linen: addonQty['Black Linen'] || 0,
+    white_linen: addonQty['White Linen'] || 0,
+    extra_hours: addonQty['Additional Hour'] || 0
   };
 
   let hadError = false;
