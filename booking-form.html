@@ -138,6 +138,12 @@
     border-radius:10px;
     padding:28px;
   }
+  .form-wrap{
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
 
   .step{display:none;animation:fadeSlide .35s ease;}
   .step.visible{display:block;}
@@ -435,7 +441,7 @@
 
   <div class="layout" id="formLayout">
     <div class="main-col">
-      <div class="card">
+      <div class="card form-wrap">
 
         <!-- STEP 1 -->
         <div class="step" data-step="1">
@@ -1435,6 +1441,19 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 renderCalendar();
 updateSummary();
 showLanding();
+</script>
+
+<script>
+function sendHeight() {
+  const height = document.documentElement.scrollHeight;
+  window.parent.postMessage({ formHeight: height }, '*');
+}
+window.addEventListener('load', sendHeight);
+const observer = new ResizeObserver(sendHeight);
+observer.observe(document.body);
+document.addEventListener('click', function() {
+  setTimeout(sendHeight, 400);
+});
 </script>
 </body>
 </html>
