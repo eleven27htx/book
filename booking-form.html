@@ -1595,6 +1595,10 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const rentalLength = `${state.package.hours}HR`;
   const opportunityName = `${state.selectedDateStr} — ${state.form.lastName} — ${state.package.name} ${rentalLength}`;
 
+  const selectedAddons = addons.map(a => a.name);
+  const addonQty = {};
+  addons.forEach(a => { addonQty[a.name] = a.qty; });
+
   const payload = {
     booking_type: state.bookingType === 'booth' ? 'booth_only' : 'venue',
     contact_first_name: state.form.firstName,
@@ -1610,7 +1614,24 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     event_type: state.form.eventType,
     event_type_other: state.form.eventType === 'Other' ? state.form.eventTypeOther : '',
     guest_count: state.form.guestCount,
-    addons_selected: addons.filter(a => !a.customQuote).map(a => ({ name:a.name, qty:a.qty, price:a.price })),
+    event_addon_post_event_cleaning: selectedAddons.includes('Post Event Cleaning') ? 'Yes' : 'No',
+    event_addon_mini_magazine_booth: selectedAddons.includes('Mini Magazine Booth') ? 'Yes' : 'No',
+    event_addon_full_size_magazine_booth: selectedAddons.includes('Full Size Magazine Booth') ? 'Yes' : 'No',
+    event_addon_chafing_dish: selectedAddons.includes('Chafing Dish Package') ? 'Yes' : 'No',
+    event_addon_bartender_requested: selectedAddons.includes('Bartender') ? 'Yes' : 'No',
+    event_addon_security_requested: selectedAddons.includes('Security') ? 'Yes' : 'No',
+    event_addon_event_planning_requested: selectedAddons.includes('Event Planning') ? 'Yes' : 'No',
+    event_addon_event_coordination_requested: selectedAddons.includes('Event Coordination') ? 'Yes' : 'No',
+    event_addon_decor_package_requested: selectedAddons.includes('Decor Package') ? 'Yes' : 'No',
+    event_addon_catering_requested: selectedAddons.includes('Catering') ? 'Yes' : 'No',
+    event_addon_dj_requested: selectedAddons.includes('DJ') ? 'Yes' : 'No',
+    event_addon_photography_requested: selectedAddons.includes('Photography') ? 'Yes' : 'No',
+    event_addon_videography_requested: selectedAddons.includes('Videography') ? 'Yes' : 'No',
+    event_addon_cocktail_tables_qty: addonQty['Cocktail Tables'] || 0,
+    event_addon_marquee_qty: addonQty['Marquee Letters/Numbers'] || 0,
+    event_addon_black_linen_qty: addonQty['Black Linen'] || 0,
+    event_addon_white_linen_qty: addonQty['White Linen'] || 0,
+    event_addon_additional_hours_qty: addonQty['Additional Hour'] || 0,
     custom_quote_items: addons.filter(a => a.customQuote).map(a => a.name),
     event_additional_info: state.form.additionalInfo,
     monetary_value: subtotal,
