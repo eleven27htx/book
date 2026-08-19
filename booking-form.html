@@ -1114,12 +1114,15 @@ function calcSubtotal(){
 function calcDeposit(){
   if (!state.selectedDateStr) return { amount:0, label:'', balance:0 };
   const eventDate = new Date(state.selectedDateStr + 'T00:00:00');
-  const today = new Date(MIN_YEAR, MIN_MONTH-1, 1); // fallback floor; real "today" below
   const now = new Date();
   const diffDays = Math.ceil((eventDate - now) / 86400000);
   const subtotal = calcSubtotal();
+
   if (diffDays >= 30){
-    return { amount: PRICING.deposit.moreThan30Days, label: `${fmtMoney(PRICING.deposit.moreThan30Days)} non-refundable deposit due today`, balance: Math.max(subtotal - PRICING.deposit.moreThan30Days, 0), full:false };
+    const amount = state.bookingType === 'booth'
+      ? Math.ceil(subtotal * 0.5)
+      : Math.min(PRICING.deposit.moreThan30Days, subtotal);
+    return { amount, label: `${fmtMoney(amount)} non-refundable deposit due today`, balance: Math.max(subtotal - amount, 0), full:false };
   }
   return { amount: subtotal, label: 'Full balance due — event is within 30 days', balance: 0, full:true };
 }
