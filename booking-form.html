@@ -554,6 +554,8 @@
             <div class="field" data-field="startTime">
               <label>Preferred Start Time *</label>
               <select id="startTime"></select>
+              <div class="note" id="startEndPreview" style="margin-top:6px;display:none;"></div>
+              <div class="avail-msg warn" id="noStartTimesMsg" style="display:none;">Please contact us directly to arrange this booking</div>
               <div class="err">Please select a start time.</div>
             </div>
             <div class="field">
@@ -1223,6 +1225,7 @@ function goToStep(n){
 
   if (n === 2) renderPackages();
   if (n === 3) renderAddons();
+  if (n === 4) populateStartTimes();
   if (n === 5) { renderReview(); runFinalCheck(); }
 }
 
@@ -1235,17 +1238,56 @@ document.getElementById('back4').addEventListener('click', () => goToStep(state.
 document.getElementById('back5').addEventListener('click', () => goToStep(4));
 
 // ---------- step 4 form ----------
+function getStartTimeWindow(){
+  if (!state.package || state.package.hours == null) return null;
+  const hours = state.package.hours;
+  const isFridayHourly = state.bookingType === 'venue' && state.pricingTier === 'friday' && state.package.type === 'hourly';
+  const latestEnd = isFridayHourly ? 16*60 : 25*60; // minutes; 25:00 = 1:00 AM the next day
+  const earliest = 7*60;
+  const latestStart = latestEnd - hours*60;
+  return { earliest, latestStart: latestStart >= earliest ? latestStart : null };
+}
+
 function populateStartTimes(){
   const sel = document.getElementById('startTime');
+  const previewEl = document.getElementById('startEndPreview');
+  const noSlotsEl = document.getElementById('noStartTimesMsg');
+  sel.innerHTML = '';
+  previewEl.style.display = 'none';
+
+  const win = getStartTimeWindow();
+
+  if (!win || win.latestStart === null){
+    sel.style.display = 'none';
+    noSlotsEl.style.display = 'block';
+    return;
+  }
+
+  sel.style.display = '';
+  noSlotsEl.style.display = 'none';
   sel.innerHTML = '<option value="">Select a time</option>';
-  for (let mins = 7*60; mins <= 23*60; mins += 30){
+  for (let mins = win.earliest; mins <= win.latestStart; mins += 30){
     const opt = document.createElement('option');
     opt.value = minutesToHHMM(mins);
     opt.textContent = minutesToLabel(mins);
     sel.appendChild(opt);
   }
 }
-populateStartTimes();
+
+function updateStartEndPreview(){
+  const previewEl = document.getElementById('startEndPreview');
+  const val = document.getElementById('startTime').value;
+  if (!val || !state.package || state.package.hours == null){
+    previewEl.style.display = 'none';
+    return;
+  }
+  const [h,m] = val.split(':').map(Number);
+  const startMins = h*60 + m;
+  const endMins = startMins + state.package.hours*60;
+  previewEl.textContent = `Start: ${minutesToLabel(startMins)} → End: ${minutesToLabel(endMins)}`;
+  previewEl.style.display = 'block';
+}
+document.getElementById('startTime').addEventListener('change', updateStartEndPreview);
 
 document.getElementById('eventType').addEventListener('change', (e) => {
   document.getElementById('eventTypeOtherField').style.display = e.target.value === 'Other' ? 'block' : 'none';
