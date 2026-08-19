@@ -875,10 +875,13 @@ async function renderCalendar(){
 
     if (isPast){
       el.classList.add('past');
+    } else if (state.bookingType === 'booth' && info && info.boothAvailable === false){
+      el.classList.add('unavailable');
+      el.title = 'Unavailable';
     } else {
       el.classList.add('available');
       el.addEventListener('click', () => selectDate(state.currentYear, state.currentMonth, d, info || {venueAvailable:true, boothAvailable:true}));
-      if (info && (info.venueAvailable === false || info.boothAvailable === false)){
+      if (state.bookingType !== 'booth' && info && info.venueAvailable === false){
         const dot = document.createElement('span');
         dot.className = 'cal-dot';
         el.appendChild(dot);
@@ -903,7 +906,9 @@ function selectDate(y, m, d, info){
   renderCalendar();
   const box = document.getElementById('selectedDateInfo');
   box.style.display = 'block';
-  const hasPartialBooking = info && (info.venueAvailable === false || info.boothAvailable === false);
+  const hasPartialBooking = state.bookingType === 'booth'
+    ? !!(info && info.boothAvailable === false)
+    : !!(info && info.venueAvailable === false);
   const timeNote = hasPartialBooking
     ? `<div class="note gold" style="margin-top:10px;">Other events are already booked this day. We'll confirm your exact time is available before checkout.</div>`
     : `<div class="note" style="margin-top:10px;">This date is open. We'll confirm your exact time is available in the final step.</div>`;
