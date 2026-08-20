@@ -943,7 +943,7 @@ async function renderCalendar(){
 
     const isBlocked = state.bookingType === 'booth'
       ? !!(info && info.boothAvailable === false)
-      : !!(info && (info.hasBookings === true || info.venueAvailable === false));
+      : !!(info && info.venueAvailable === false);
 
     if (isPast){
       el.classList.add('past');
@@ -1571,9 +1571,10 @@ async function runFinalCheck(){
 
   const start = state.form.startTime;
   const end = minutesToHHMM(endTimeMinutes());
+  const typeParam = state.bookingType === 'booth' ? '&type=booth' : '&type=venue';
   const boothTypeParam = state.bookingType === 'booth' && state.boothType ? `&boothType=${state.boothType}` : '';
   try {
-    const res = await fetch(`${API_URL}?action=check&date=${state.selectedDateStr}&start=${start}&end=${end}${boothTypeParam}`);
+    const res = await fetch(`${API_URL}?action=check&date=${state.selectedDateStr}&start=${start}&end=${end}${typeParam}${boothTypeParam}`);
     const data = await res.json();
     state.finalCheck = { checked:true, venueAvailable: data.venueAvailable !== false, boothAvailable: data.boothAvailable !== false };
   } catch(e){
