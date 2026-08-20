@@ -896,7 +896,9 @@ async function fetchMonth(year, month){
   return state.monthCache[key];
 }
 
+let calendarRenderToken = 0;
 async function renderCalendar(){
+  const myToken = ++calendarRenderToken;
   const grid = document.getElementById('calGrid');
   document.getElementById('monthLabel').textContent = `${MONTH_NAMES[state.currentMonth-1]} ${state.currentYear}`;
   document.getElementById('prevMonth').disabled = (state.currentYear === MIN_YEAR && state.currentMonth === MIN_MONTH);
@@ -920,6 +922,7 @@ async function renderCalendar(){
   } catch(e) {
     console.error('Failed to load availability', e);
   }
+  if (myToken !== calendarRenderToken) return; // superseded by a newer render call; abandon
   loading.remove();
 
   const firstDow = new Date(state.currentYear, state.currentMonth-1, 1).getDay();
@@ -1752,7 +1755,9 @@ function resetAfterSubmission(){
 
   resetToLanding();
 }
-document.getElementById('confirmDoneBtn').addEventListener('click', resetAfterSubmission);
+document.getElementById('confirmDoneBtn').addEventListener('click', () => {
+  window.location.reload();
+});
 
 // ---------- init ----------
 renderCalendar();
