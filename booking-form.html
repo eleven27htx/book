@@ -828,7 +828,7 @@ const PACKAGE_INCLUDES = {
     "On-site parking and ADA-accessible restrooms",
     "Outside vendors welcome under venue guidelines",
     "Custom floor plan design",
-    "Standard black or white linens for guest, buffet, cake, and gift tables",
+    "Standard linens in your choice of color for guest, buffet, cake, and gift tables",
     "10 standard centerpieces",
     "Installed 10–12 ft balloon backdrop",
     "Charger plates and napkins for up to 100 guests",
@@ -1172,6 +1172,7 @@ function renderAddons(){
       bodyExtra = '<div class="addon-desc">Our team will follow up on pricing.</div>';
     }
     if (addon.name === 'Full Service Event Planning' && pkgName === 'The Signature') bodyExtra += '<div class="addon-desc">$400 upgrade from your included day-of/vendor coordination.</div>';
+    if (pkgName === 'The Elevated' && (addon.name === 'Black Linen' || addon.name === 'White Linen')) bodyExtra += '<div class="addon-included-tag">Standard linens in your choice of color are included.</div>';
     if (addon.includedQty && addon.includedQty[pkgName]) bodyExtra += `<div class="addon-included-tag">${addon.includedQty[pkgName]} included. Select only additional characters below.</div>`;
     if (boothLimited){
       bodyExtra += '<div class="addon-warn">Magazine Booth may be unavailable for this date. Select it and our team will confirm.</div>';
