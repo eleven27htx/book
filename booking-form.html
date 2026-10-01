@@ -1441,7 +1441,7 @@ function goToStep(n){
   const defs = STEP_DEFS[state.bookingType] || STEP_DEFS.venue;
   const idx = defs.findIndex(d => d.step === n);
   const pct = n === 'confirm' ? 100 : (idx >= 0 ? (idx/(defs.length-1))*100 : 0);
-  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressFill').style.width = (pct * 0.9) + '%';
   document.querySelectorAll('.progress-step').forEach(el => {
     const s = el.dataset.step; // always a string, may be numeric ("1") or a name ("boothSelect")
     const elIdx = defs.findIndex(d => String(d.step) === s);
