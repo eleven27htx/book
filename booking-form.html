@@ -753,8 +753,8 @@ const PRICING = {
     { name: 'Additional Hour',          price: 150,  perUnit: true,  maxQty: 4  },
     { name: 'Bartender',                price: 0,    customQuote: true },
     { name: 'Security',                 price: 50,   security: true },
-    { name: 'Event Planning',           price: 0,    customQuote: true },
-    { name: 'Event Coordination',       price: 400,  includedIn: ['The Signature'] },
+    { name: 'Full Service Event Planning',           price: 927, packagePrices: { 'The Signature': 400 } },
+    { name: 'Day of/Vendor Coordination',       price: 527,  includedIn: ['The Signature'] },
     { name: 'Catering',                 price: 0,    customQuote: true },
     { name: 'DJ',                       price: 0,    customQuote: true },
     { name: 'Photography',              price: 0,    customQuote: true },
@@ -799,8 +799,8 @@ const ADDON_DESCRIPTIONS = {
   'Additional Hour': 'Extend your rental beyond your package hours.',
   'Bartender': 'Professional bartending service for your event.',
   'Security': '$50 per officer per required event hour. Excludes setup and breakdown. Must be booked through Eleven 27; coverage is subject to venue approval.',
-  'Event Planning': 'Full-service event planning from our team.',
-  'Event Coordination': 'Day-of coordination to keep your event on track.',
+  'Full Service Event Planning': 'Full-service event planning, including day-of and vendor coordination. Coordination is included in this price.',
+  'Day of/Vendor Coordination': 'Day-of and vendor coordination to keep your event on track.',
   'Catering': 'Catering options tailored to your guest count.',
   'DJ': 'Professional DJ services for your event.',
   'Photography': 'Professional event photography.',
@@ -1137,6 +1137,15 @@ function currentPackageName(){
   return state.package ? state.package.name : null;
 }
 
+function addonPrice(addon){
+  return addon.packagePrices && addon.packagePrices[currentPackageName()] !== undefined ? addon.packagePrices[currentPackageName()] : addon.price;
+}
+
+function addonIsIncluded(addon){
+  return !!((addon.includedIn && addon.includedIn.includes(currentPackageName())) ||
+    (addon.name === 'Day of/Vendor Coordination' && state.addons['Full Service Event Planning'].selected));
+}
+
 function renderAddons(){
   const grid = document.getElementById('addonGrid');
   grid.innerHTML = '';
@@ -1145,7 +1154,7 @@ function renderAddons(){
 
   PRICING.addons.forEach(addon => {
     const s = state.addons[addon.name];
-    const included = addon.includedIn && pkgName && addon.includedIn.includes(pkgName);
+    const included = addonIsIncluded(addon);
     const isBooth = addon.name.includes('Magazine Booth');
     const boothLimited = isBooth && !boothAvailable;
 
@@ -1155,13 +1164,14 @@ function renderAddons(){
     else if (s.selected) card.classList.add('selected');
     if (boothLimited) card.classList.add('dimmed');
 
-    let priceLabel = addon.security ? '$50/officer/hour' : addon.customQuote ? 'Custom Quote' : (addon.perUnit ? `${fmtMoney(addon.price)}/ea` : fmtMoney(addon.price));
+    let priceLabel = addon.security ? '$50/officer/hour' : addon.customQuote ? 'Custom Quote' : (addon.perUnit ? `${fmtMoney(addonPrice(addon))}/ea` : fmtMoney(addonPrice(addon)));
     let bodyExtra = '';
     if (included){
-      bodyExtra = '<div class="addon-included-tag">&#10003; Included in your package</div>';
+      bodyExtra = '<div class="addon-included-tag">&#10003; ' + (addon.includedIn && addon.includedIn.includes(pkgName) ? 'Included in your package' : 'Included with Full Service Event Planning') + '</div>';
     } else if (addon.customQuote){
       bodyExtra = '<div class="addon-desc">Our team will follow up on pricing.</div>';
     }
+    if (addon.name === 'Full Service Event Planning' && pkgName === 'The Signature') bodyExtra += '<div class="addon-desc">$400 upgrade from your included day-of/vendor coordination.</div>';
     if (addon.includedQty && addon.includedQty[pkgName]) bodyExtra += `<div class="addon-included-tag">${addon.includedQty[pkgName]} included. Select only additional characters below.</div>`;
     if (boothLimited){
       bodyExtra += '<div class="addon-warn">Magazine Booth may be unavailable for this date. Select it and our team will confirm.</div>';
@@ -1172,7 +1182,7 @@ function renderAddons(){
         <button type="button" data-act="minus" data-name="${addon.name}">&minus;</button>
         <span>${s.qty}</span>
         <button type="button" data-act="plus" data-name="${addon.name}">+</button>
-        <span style="color:var(--muted);font-size:12px;">x ${fmtMoney(addon.price)}</span>
+        <span style="color:var(--muted);font-size:12px;">x ${fmtMoney(addonPrice(addon))}</span>
       </div>`;
     }
 
@@ -1224,13 +1234,13 @@ function getSelectedAddons(){
   if (state.bookingType !== 'venue') return result;
   PRICING.addons.forEach(addon => {
     const s = state.addons[addon.name];
-    const included = addon.includedIn && pkgName && addon.includedIn.includes(pkgName);
+    const included = addonIsIncluded(addon);
     if (included || !s.selected) return;
     result.push({
       name: addon.name,
       qty: addon.security ? state.securityOfficers : addon.perUnit ? s.qty : 1,
       detail: addon.security ? `${state.securityOfficers} officer(s) × ${state.securityHours} event hours × $50` : '',
-      price: addon.security ? securityCost() : addon.customQuote ? 0 : addon.price * (addon.perUnit ? s.qty : 1),
+      price: addon.security ? securityCost() : addon.customQuote ? 0 : addonPrice(addon) * (addon.perUnit ? s.qty : 1),
       customQuote: !!addon.customQuote
     });
   });
@@ -1719,7 +1729,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const rentalLength = `${state.package.hours + additionalHoursQty} Hours`;
   const opportunityName = `${state.selectedDateStr} — ${state.form.lastName} — ${state.package.name}`;
 
-  const includedAddons = PRICING.addons.filter(a => a.includedIn && a.includedIn.includes(currentPackageName())).map(a => a.name);
+  const includedAddons = PRICING.addons.filter(a => addonIsIncluded(a)).map(a => a.name);
   const selectedAddons = [...new Set(addons.map(a => a.name).concat(includedAddons))];
   const addonQty = {};
   addons.forEach(a => { addonQty[a.name] = a.qty; });
@@ -1766,8 +1776,8 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     chafing: selectedAddons.includes('Chafing Dish Package') ? 'Yes' : 'No',
     bartender: selectedAddons.includes('Bartender') ? 'Yes' : 'No',
     security: selectedAddons.includes('Security') ? 'Yes' : 'No',
-    planning: selectedAddons.includes('Event Planning') ? 'Yes' : 'No',
-    coordination: selectedAddons.includes('Event Coordination') ? 'Yes' : 'No',
+    planning: selectedAddons.includes('Full Service Event Planning') ? 'Yes' : 'No',
+    coordination: selectedAddons.includes('Day of/Vendor Coordination') ? 'Yes' : 'No',
     decor: selectedAddons.includes('Decor Package') ? 'Yes' : 'No',
     catering: selectedAddons.includes('Catering') ? 'Yes' : 'No',
     dj: selectedAddons.includes('DJ') ? 'Yes' : 'No',
