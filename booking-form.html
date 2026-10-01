@@ -438,6 +438,25 @@
     text-transform:uppercase;cursor:pointer;padding:0;margin-bottom:18px;font-family:'Montserrat',sans-serif;
   }
   .change-type-link:hover{color:var(--gold);}
+
+  .package-details summary{cursor:pointer;padding:12px 0;font-weight:600;font-size:14px;min-height:44px;}
+  .pkg-includes{font-size:14px;}
+  .rev-row,.sum-row{gap:14px;overflow-wrap:anywhere;}
+  .security-fields{margin-top:16px;padding:20px;border:1px solid var(--border);border-radius:8px;}
+  .qty-ctrl button,.addon-qty button,.cal-nav button{min-width:44px;min-height:44px;}
+  @media(max-width:600px){
+    .wrap{padding:16px 12px 150px;}
+    .form-wrap{padding:12px 0;}
+    .pkg-grid,.addon-grid{grid-template-columns:minmax(0,1fr);}
+    .type-card{width:100%;max-width:360px;}
+    .field input,.field select,.field textarea{font-size:16px;}
+    .btn{padding:14px 18px;min-height:44px;}
+    .tagline{font-size:11px;letter-spacing:1.5px;}
+    .addon-top{flex-wrap:wrap;}
+    .mobile-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+    .mobile-bar-head{min-height:44px;}
+    .cal-grid{gap:3px;}
+  }
 </style>
 </head>
 <body class="landing">
@@ -520,6 +539,16 @@
           <h2>Add-Ons</h2>
           <div class="step-sub">Enhance your event. This step is optional.</div>
           <div class="addon-grid" id="addonGrid"></div>
+          <div id="securityFields" class="security-fields" style="display:none;">
+            <h3>Security coverage</h3>
+            <p class="note">Enter only event hours requiring security, excluding setup and breakdown. Coverage and officer count are subject to venue approval.</p>
+            <div class="form-grid">
+              <div class="field"><label for="securityOfficers">Number of officers</label><input id="securityOfficers" type="number" min="1" step="1" value="1"></div>
+              <div class="field"><label for="securityHours">Required event coverage hours</label><input id="securityHours" type="number" min="0.5" step="0.5" placeholder="For example, 4"></div>
+            </div>
+            <p id="securityCost" aria-live="polite"></p>
+            <p id="securityError" class="avail-msg bad" style="display:none;">Enter a whole number of officers and coverage hours in half-hour increments, within your reserved duration.</p>
+          </div>
           <div class="btn-row">
             <button class="btn btn-ghost" id="back3" type="button">Back</button>
             <button class="btn btn-primary" id="next3" type="button">Next</button>
@@ -692,40 +721,40 @@ const PRICING = {
   packages: {
     friday: [
       { name: 'The Space',     hours: 6,  price: 1050 },
-      { name: 'The Space',     hours: 12, price: 1900 },
-      { name: 'The Social',    hours: 6,  price: 1950 },
-      { name: 'The Social',    hours: 12, price: 2800 },
-      { name: 'The Signature', hours: 12, price: 4500 }
+      { name: 'The Space',     hours: 12, price: 1750 },
+      { name: 'The Elevated',    hours: 6,  price: 2800 },
+      { name: 'The Elevated',    hours: 12, price: 3500 },
+      { name: 'The Signature', hours: 12, price: 4727 }
     ],
     saturday: [
       { name: 'The Space',     hours: 6,  price: 1250 },
-      { name: 'The Space',     hours: 12, price: 2300 },
-      { name: 'The Social',    hours: 6,  price: 2300 },
-      { name: 'The Social',    hours: 12, price: 3200 },
-      { name: 'The Signature', hours: 12, price: 5500 }
+      { name: 'The Space',     hours: 12, price: 2050 },
+      { name: 'The Elevated',    hours: 6,  price: 3100 },
+      { name: 'The Elevated',    hours: 12, price: 3900 },
+      { name: 'The Signature', hours: 12, price: 5027 }
     ],
     sunday: [
       { name: 'The Space',     hours: 6,  price: 1050 },
-      { name: 'The Space',     hours: 12, price: 1900 },
-      { name: 'The Social',    hours: 6,  price: 1850 },
-      { name: 'The Social',    hours: 12, price: 2700 },
-      { name: 'The Signature', hours: 12, price: 4500 }
+      { name: 'The Space',     hours: 12, price: 1750 },
+      { name: 'The Elevated',    hours: 6,  price: 2800 },
+      { name: 'The Elevated',    hours: 12, price: 3500 },
+      { name: 'The Signature', hours: 12, price: 4727 }
     ]
   },
   addons: [
-    { name: 'Post Event Cleaning',      price: 200,  perUnit: false },
-    { name: 'Mini Magazine Booth',      price: 200,  perUnit: false, includedIn: ['The Social'] },
+    { name: 'Post Event Cleaning',      price: 200,  perUnit: false, includedIn: ['The Elevated', 'The Signature'] },
+    { name: 'Mini Magazine Booth',      price: 200,  perUnit: false, includedIn: ['The Elevated'] },
     { name: 'Full Size Magazine Booth', price: 400,  perUnit: false, includedIn: ['The Signature'] },
     { name: 'Chafing Dish Package',     price: 125,  perUnit: false },
-    { name: 'Cocktail Tables',          price: 10,   perUnit: true,  maxQty: 6,  includedIn: ['The Signature'] },
-    { name: 'Marquee Letters/Numbers',  price: 40,   perUnit: true,  maxQty: 10, includedIn: ['The Signature'] },
-    { name: 'Black Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Social', 'The Signature'] },
-    { name: 'White Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Social', 'The Signature'] },
+    { name: 'Cocktail Tables',          price: 10,   perUnit: true,  maxQty: 6 },
+    { name: 'Marquee Letters/Numbers',  price: 40,   perUnit: true,  maxQty: 10, includedQty: { 'The Elevated': 2, 'The Signature': 4 } },
+    { name: 'Black Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
+    { name: 'White Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'Additional Hour',          price: 150,  perUnit: true,  maxQty: 4  },
     { name: 'Bartender',                price: 0,    customQuote: true },
-    { name: 'Security',                 price: 0,    customQuote: true },
+    { name: 'Security',                 price: 50,   security: true },
     { name: 'Event Planning',           price: 0,    customQuote: true },
-    { name: 'Event Coordination',       price: 0,    customQuote: true },
+    { name: 'Event Coordination',       price: 0,    customQuote: true, includedIn: ['The Signature'] },
     { name: 'Decor Package',            price: 0,    customQuote: true },
     { name: 'Catering',                 price: 0,    customQuote: true },
     { name: 'DJ',                       price: 0,    customQuote: true },
@@ -737,7 +766,7 @@ const PRICING = {
     lessThan30Days: 'full'
   },
   additionalHourRate: 150,
-  boothPackages: ['The Social', 'The Signature'],
+  boothPackages: ['The Elevated', 'The Signature'],
   booth: {
     mini: {
       name: 'Mini Magazine Booth',
@@ -760,7 +789,7 @@ const PRICING = {
 // ============================================================
 
 const ADDON_DESCRIPTIONS = {
-  'Post Event Cleaning': 'We handle the post-event clean up so you can walk away stress-free.',
+  'Post Event Cleaning': 'Ordinary post-event cleaning. Customers and vendors must still remove food, decor, rentals, belongings, and equipment within the reserved time.',
   'Mini Magazine Booth': 'A compact photo/magazine-cover booth for your guests.',
   'Full Size Magazine Booth': 'Our full-size magazine cover photo booth experience.',
   'Chafing Dish Package': 'Chafing dishes and warming setup for catered food.',
@@ -770,7 +799,7 @@ const ADDON_DESCRIPTIONS = {
   'White Linen': 'White linen tablecloths, priced per linen.',
   'Additional Hour': 'Extend your rental beyond your package hours.',
   'Bartender': 'Professional bartending service for your event.',
-  'Security': 'On-site security staffing for your event.',
+  'Security': '$50 per officer per required event hour. Excludes setup and breakdown. Must be booked through Eleven 27; coverage is subject to venue approval.',
   'Event Planning': 'Full-service event planning from our team.',
   'Event Coordination': 'Day-of coordination to keep your event on track.',
   'Decor Package': 'Custom decor curated for your event.',
@@ -781,36 +810,58 @@ const ADDON_DESCRIPTIONS = {
 };
 
 const PACKAGE_INCLUDES = {
-  'The Space': [
-    '100 clear Chiavari chairs',
-    '10 round tables',
-    '2 eight-foot rectangle tables',
-    '4 six-foot rectangle tables',
-    'Built-in bar',
-    'Kitchenette',
-    'WiFi',
-    'Bluetooth speaker',
-    'Microphone',
-    'Ample parking',
-    'Two ADA accessible restrooms'
+  "The Space": [
+    "Up to 100 clear acrylic chairs",
+    "Tables and standard table and chair setup",
+    "10 round tables, 2 eight-foot and 4 six-foot rectangle tables",
+    "Kitchenette access",
+    "Wi-Fi, speaker, and microphone",
+    "On-site parking and ADA-accessible restrooms",
+    "Outside vendors welcome under venue guidelines",
+    "Decor, linens, a Magazine Booth, and ordinary post-event cleaning are not included",
+    "All setup, breakdown, cleaning, and checkout must fit within reserved hours"
   ],
-  'The Social': [
-    'Everything in The Space',
-    'Black or white linens',
-    'Basic centerpieces',
-    'Mini Magazine Booth'
+  "The Elevated": [
+    "Up to 100 clear acrylic chairs",
+    "Tables and standard table and chair setup",
+    "10 round tables, 2 eight-foot and 4 six-foot rectangle tables",
+    "Kitchenette access",
+    "Wi-Fi, speaker, and microphone",
+    "On-site parking and ADA-accessible restrooms",
+    "Outside vendors welcome under venue guidelines",
+    "Custom floor plan design",
+    "Standard black or white linens for guest, buffet, cake, and gift tables",
+    "10 standard centerpieces",
+    "Installed 10–12 ft balloon backdrop",
+    "Charger plates and napkins for up to 100 guests",
+    "Welcome sign",
+    "Mini Magazine Booth",
+    "Two marquee characters with delivery",
+    "One printed photo banner",
+    "Decorator service and delivery",
+    "Booth handling, linen care, venue labor, and ordinary post-event cleaning"
   ],
-  'The Signature': [
-    'Everything in The Social',
-    'Event planning',
-    'Event coordination',
-    'Vendor coordination',
-    'Custom floor layout',
-    'Full decor package',
-    'Full size Magazine Booth',
-    'Up to 6 cocktail tables',
-    'Marquee letters and numbers',
-    'Post-event cleaning'
+  "The Signature": [
+    "Up to 100 clear acrylic chairs",
+    "Tables and standard table and chair setup",
+    "10 round tables, 2 eight-foot and 4 six-foot rectangle tables",
+    "Kitchenette access",
+    "Wi-Fi, speaker, and microphone",
+    "On-site parking and ADA-accessible restrooms",
+    "Outside vendors welcome under venue guidelines",
+    "12 hours included and a custom floor plan",
+    "Specialty linens for guest tables; standard linens for buffet, cake, and gift tables",
+    "Five large and five standard centerpieces",
+    "Installed 15–18 ft balloon backdrop",
+    "Charger plates and napkins for up to 100 guests",
+    "Welcome sign",
+    "Full-size Magazine Booth",
+    "Four marquee characters with delivery",
+    "Two printed photo banners",
+    "Decorator service and delivery",
+    "Two servers for four hours",
+    "Combined vendor and day-of coordination",
+    "Booth handling, linen care, venue labor, and ordinary post-event cleaning"
   ]
 };
 
@@ -845,6 +896,9 @@ const state = {
   addons: {},
   form: {},
   finalCheck: { checked: false, venueAvailable: true, boothAvailable: true },
+  securityOfficers: 1,
+  securityHours: 0,
+  submissionId: null,
   step: 1
 };
 
@@ -969,7 +1023,7 @@ function selectDate(y, m, d, info){
   const dow = new Date(y, m-1, d).getDay();
   state.dayOfWeek = dow;
   state.pricingTier = tierForDow(dow);
-  if (state.bookingType === 'venue') state.package = null;
+  if (state.bookingType === 'venue') { state.package = null; document.getElementById('next2').disabled = true; }
   state.hourlyHours = PRICING.weekday.minHours;
   state.finalCheck = { checked:false, venueAvailable:true, boothAvailable:true };
 
@@ -1053,13 +1107,13 @@ function renderPackages(){
       card.className = 'pkg-card' + (isSelected ? ' selected' : '');
       const includes = PACKAGE_INCLUDES[pkg.name] || [];
       card.innerHTML = `
-        ${pkg.name === 'The Signature' ? '<div class="pkg-badge">Most Popular</div>' : ''}
+        ${pkg.name === 'The Elevated' && pkg.hours === 6 ? '<div class="pkg-badge">Most Popular</div>' : ''}
         <div class="pkg-name">${pkg.name}</div>
         <div class="pkg-hours">${pkg.hours} hours</div>
         <div class="pkg-price">${pkg.startingAt ? 'Starting at ' : ''}${fmtMoney(pkg.price)}${pkg.customQuote ? '<br><small>Custom quote required. Our team will contact you.</small>' : ''}</div>
-        <ul class="pkg-includes">${includes.map(i=>`<li>${i}</li>`).join('')}</ul>
+        <details class="package-details"><summary>See all inclusions</summary><ul class="pkg-includes">${includes.map(i=>`<li>${i}</li>`).join('')}</ul></details><button type="button" class="btn btn-ghost select-package" style="margin-top:16px;width:100%;">${isSelected ? 'Selected' : 'Select package'}</button>
       `;
-      card.addEventListener('click', () => selectPackage({ type:'package', name:pkg.name, hours:pkg.hours, price:pkg.price, customQuote: !!pkg.customQuote, startingAt: !!pkg.startingAt }));
+      card.addEventListener('click', (e) => { if (e.target.closest('details')) return; selectPackage({ type:'package', name:pkg.name, hours:pkg.hours, price:pkg.price, customQuote: !!pkg.customQuote, startingAt: !!pkg.startingAt }); });
       grid.appendChild(card);
     });
     container.appendChild(grid);
@@ -1103,13 +1157,14 @@ function renderAddons(){
     else if (s.selected) card.classList.add('selected');
     if (boothLimited) card.classList.add('dimmed');
 
-    let priceLabel = addon.customQuote ? 'Custom Quote' : (addon.perUnit ? `${fmtMoney(addon.price)}/ea` : fmtMoney(addon.price));
+    let priceLabel = addon.security ? '$50/officer/hour' : addon.customQuote ? 'Custom Quote' : (addon.perUnit ? `${fmtMoney(addon.price)}/ea` : fmtMoney(addon.price));
     let bodyExtra = '';
     if (included){
       bodyExtra = '<div class="addon-included-tag">&#10003; Included in your package</div>';
     } else if (addon.customQuote){
       bodyExtra = '<div class="addon-desc">Our team will follow up on pricing.</div>';
     }
+    if (addon.includedQty && addon.includedQty[pkgName]) bodyExtra += `<div class="addon-included-tag">${addon.includedQty[pkgName]} included. Select only additional characters below.</div>`;
     if (boothLimited){
       bodyExtra += '<div class="addon-warn">Magazine Booth may be unavailable for this date. Select it and our team will confirm.</div>';
     }
@@ -1150,6 +1205,7 @@ function renderAddons(){
     grid.appendChild(card);
   });
 
+  renderSecurity();
   grid.querySelectorAll('[data-act]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1167,20 +1223,46 @@ function renderAddons(){
 function getSelectedAddons(){
   const pkgName = currentPackageName();
   const result = [];
+  if (state.bookingType !== 'venue') return result;
   PRICING.addons.forEach(addon => {
     const s = state.addons[addon.name];
     const included = addon.includedIn && pkgName && addon.includedIn.includes(pkgName);
     if (included || !s.selected) return;
     result.push({
       name: addon.name,
-      qty: addon.perUnit ? s.qty : 1,
-      price: addon.customQuote ? 0 : addon.price * (addon.perUnit ? s.qty : 1),
+      qty: addon.security ? state.securityOfficers : addon.perUnit ? s.qty : 1,
+      detail: addon.security ? `${state.securityOfficers} officer(s) × ${state.securityHours} event hours × $50` : '',
+      price: addon.security ? securityCost() : addon.customQuote ? 0 : addon.price * (addon.perUnit ? s.qty : 1),
       customQuote: !!addon.customQuote
     });
   });
   return result;
 }
 
+function reservedHours(){
+  const extra = state.bookingType === 'venue' && state.addons['Additional Hour'].selected ? state.addons['Additional Hour'].qty : 0;
+  return (state.package ? state.package.hours : 0) + extra;
+}
+function securityCost(){
+  return state.bookingType === 'venue' && state.addons.Security.selected ? 50 * state.securityOfficers * state.securityHours : 0;
+}
+function renderSecurity(){
+  document.getElementById('securityFields').style.display = state.addons.Security.selected ? 'block' : 'none';
+  document.getElementById('securityCost').textContent = state.securityHours > 0 ? fmtMoney(securityCost()) + ' security total' : 'Enter required event coverage hours to calculate security.';
+}
+function validSecurity(){
+  if (state.bookingType !== 'venue' || !state.addons.Security.selected) return true;
+  return Number.isInteger(state.securityOfficers) && state.securityOfficers >= 1 &&
+    Number.isFinite(state.securityHours) && state.securityHours > 0 &&
+    Number.isInteger(state.securityHours * 2) && state.securityHours <= reservedHours();
+}
+['securityOfficers','securityHours'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    state[id] = Math.max(0, Number(e.target.value) || 0);
+    renderSecurity();
+    updateSummary();
+  });
+});
 function deliveryFee(){
   return (state.bookingType === 'booth' && state.outsideDeliveryArea) ? PRICING.booth.outsideDeliveryFee : 0;
 }
@@ -1223,7 +1305,7 @@ function summaryHtml(){
   }
   const addons = getSelectedAddons();
   addons.forEach(a => {
-    rows += `<div class="sum-row"><span>${a.name}${a.qty>1?` x${a.qty}`:''}</span><span>${a.customQuote?'Quote':fmtMoney(a.price)}</span></div>`;
+    rows += `<div class="sum-row"><span>${a.name}${a.detail ? ` — ${a.detail}` : a.qty>1?` x${a.qty}`:''}</span><span>${a.customQuote?'Quote':fmtMoney(a.price)}</span></div>`;
   });
   const subtotal = calcSubtotal();
   const deposit = calcDeposit();
@@ -1267,6 +1349,9 @@ function showLanding(){
 }
 
 function resetToLanding(){
+  PRICING.addons.forEach(a => { state.addons[a.name] = {selected:false, qty:a.perUnit ? 1 : null}; });
+  state.securityHours = 0; state.securityOfficers = 1; state.submissionId = null;
+  document.getElementById('securityHours').value = ''; document.getElementById('securityOfficers').value = '1';
   state.bookingType = null;
   state.boothType = null;
   state.outsideDeliveryArea = false;
@@ -1385,17 +1470,21 @@ document.getElementById('next1').addEventListener('click', () => goToStep(state.
 document.getElementById('back2').addEventListener('click', () => goToStep(1));
 document.getElementById('next2').addEventListener('click', () => goToStep(3));
 document.getElementById('back3').addEventListener('click', () => goToStep(2));
-document.getElementById('next3').addEventListener('click', () => goToStep(4));
+document.getElementById('next3').addEventListener('click', () => {
+  document.getElementById('securityError').style.display = validSecurity() ? 'none' : 'block';
+  if (!validSecurity()) { document.getElementById('securityFields').scrollIntoView({block:'center'}); return; }
+  goToStep(4);
+});
 document.getElementById('back4').addEventListener('click', () => goToStep(state.bookingType === 'booth' ? 1 : 3));
 document.getElementById('back5').addEventListener('click', () => goToStep(4));
 
 // ---------- step 4 form ----------
 function getStartTimeWindow(){
   if (!state.package || state.package.hours == null) return null;
-  const hours = state.package.hours;
+  const hours = reservedHours();
   const isFridayHourly = state.bookingType === 'venue' && state.pricingTier === 'friday' && state.package.type === 'hourly';
-  const latestEnd = isFridayHourly ? 16*60 : 25*60; // minutes; 25:00 = 1:00 AM the next day
-  const earliest = 7*60;
+  const latestEnd = isFridayHourly ? 16*60 : (state.dayOfWeek === 5 || state.dayOfWeek === 6 || state.bookingType === 'booth' ? 25*60 : 23*60); // minutes; 25:00 = 1:00 AM the next day
+  const earliest = state.bookingType === 'venue' && state.package.type === 'package' && state.package.hours === 6 && (state.dayOfWeek === 5 || state.dayOfWeek === 6) ? 16*60 : 7*60;
   const latestStart = latestEnd - hours*60;
   return { earliest, latestStart: latestStart >= earliest ? latestStart : null };
 }
@@ -1405,7 +1494,7 @@ function populateStartTimes(){
   const previewEl = document.getElementById('startEndPreview');
   const noSlotsEl = document.getElementById('noStartTimesMsg');
 
-  const signature = `${state.bookingType}|${state.pricingTier}|${state.package ? state.package.type : ''}|${state.package ? state.package.hours : ''}`;
+  const signature = `${state.bookingType}|${state.pricingTier}|${state.package ? state.package.type : ''}|${state.package ? reservedHours() : ''}|${state.dayOfWeek}`;
   const unchanged = state._startTimeSignature === signature;
   const previousValue = sel.value;
   state._startTimeSignature = signature;
@@ -1446,7 +1535,7 @@ function updateStartEndPreview(){
   }
   const [h,m] = val.split(':').map(Number);
   const startMins = h*60 + m;
-  const endMins = startMins + state.package.hours*60;
+  const endMins = startMins + reservedHours()*60;
   previewEl.textContent = `Start: ${minutesToLabel(startMins)} → End: ${minutesToLabel(endMins)}`;
   previewEl.style.display = 'block';
 }
@@ -1497,7 +1586,7 @@ function validateStep4(){
 }
 
 document.getElementById('next4').addEventListener('click', () => {
-  if (!validateStep4()) return;
+  if (!validateStep4() || !validSecurity()) { const invalid = document.querySelector('.field.invalid'); if (invalid) invalid.scrollIntoView({block:'center'}); return; }
   state.form = {
     firstName: document.getElementById('firstName').value.trim(),
     lastName: document.getElementById('lastName').value.trim(),
@@ -1519,7 +1608,7 @@ document.getElementById('next4').addEventListener('click', () => {
 // ---------- step 5 review ----------
 function endTimeMinutes(){
   const [h,m] = state.form.startTime.split(':').map(Number);
-  return h*60 + m + state.package.hours*60;
+  return h*60 + m + reservedHours()*60;
 }
 
 function renderReview(){
@@ -1548,7 +1637,7 @@ function renderReview(){
     </div>
     ${isBooth ? '' : `<div class="rev-section">
       <div class="rev-title">Add-Ons</div>
-      ${priced.length ? priced.map(a=>`<div class="rev-row"><span>${a.name}${a.qty>1?` x${a.qty}`:''}</span><span>${fmtMoney(a.price)}</span></div>`).join('') : '<div class="rev-row"><span>None selected</span><span></span></div>'}
+      ${priced.length ? priced.map(a=>`<div class="rev-row"><span>${a.name}${a.detail ? ` — ${a.detail}` : a.qty>1?` x${a.qty}`:''}</span><span>${fmtMoney(a.price)}</span></div>`).join('') : '<div class="rev-row"><span>None selected</span><span></span></div>'}
       ${customItems.length ? `<div class="rev-title" style="margin-top:14px;font-size:13px;color:var(--gold);">Custom Quote Items</div>` + customItems.map(a=>`<div class="rev-row"><span>${a.name}</span><span>Team will follow up</span></div>`).join('') : ''}
     </div>`}
     <div class="rev-section">
@@ -1619,6 +1708,8 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
 
+  if (!validSecurity() || !state.package || !state.selectedDateStr) { submitBtn.disabled = false; return; }
+
   const [y,mo,d] = state.selectedDateStr.split('-').map(Number);
   const startMins = (() => { const [h,m] = state.form.startTime.split(':').map(Number); return h*60+m; })();
   const endMins = endTimeMinutes();
@@ -1630,7 +1721,8 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const rentalLength = `${state.package.hours + additionalHoursQty} Hours`;
   const opportunityName = `${state.selectedDateStr} — ${state.form.lastName} — ${state.package.name}`;
 
-  const selectedAddons = addons.map(a => a.name);
+  const includedAddons = PRICING.addons.filter(a => a.includedIn && a.includedIn.includes(currentPackageName())).map(a => a.name);
+  const selectedAddons = [...new Set(addons.map(a => a.name).concat(includedAddons))];
   const addonQty = {};
   addons.forEach(a => { addonQty[a.name] = a.qty; });
 
@@ -1650,14 +1742,20 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     event_type: state.form.eventType,
     event_type_other: state.form.eventType === 'Other' ? state.form.eventTypeOther : '',
     guests: state.form.guestCount,
-    notes: state.form.additionalInfo,
+    notes: [state.form.additionalInfo, state.bookingType === 'venue' ? 'Package: ' + state.package.name + ' (' + state.package.hours + ' hours); base price: ' + fmtMoney(state.package.price) + '. Included services: ' + (PACKAGE_INCLUDES[state.package.name] || []).join('; ') : '', state.addons.Security.selected && state.bookingType === 'venue' ? 'Security: ' + state.securityOfficers + ' officer(s), ' + state.securityHours + ' event coverage hours (excluding setup/breakdown), ' + fmtMoney(securityCost()) + '.' : ''].filter(Boolean).join('\n'),
+    pricing_version: '2026-10-01',
+    package_hours: state.package.hours,
+    addons_detail: addons,
+    security_officers: state.bookingType === 'venue' && state.addons.Security.selected ? state.securityOfficers : 0,
+    security_hours: state.bookingType === 'venue' && state.addons.Security.selected ? state.securityHours : 0,
+    security_total: securityCost(),
     total: subtotal,
     deposit: deposit.amount,
     balance: deposit.balance,
     deposit_paid: 'No',
     opp_name: opportunityName,
     source: state.form.hearAbout,
-    sub_id: Date.now().toString(),
+    sub_id: state.submissionId || (state.submissionId = Date.now().toString()),
     quotes: addons.filter(a => a.customQuote).map(a => a.name).join(', '),
     booth_type: state.bookingType === 'booth' ? (state.boothType === 'fullSize' ? 'full_size' : 'mini') : '',
     event_address: state.form.eventAddress,
@@ -1678,7 +1776,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     photography: selectedAddons.includes('Photography') ? 'Yes' : 'No',
     videography: selectedAddons.includes('Videography') ? 'Yes' : 'No',
     cocktail_qty: addonQty['Cocktail Tables'] || 0,
-    marquee_qty: addonQty['Marquee Letters/Numbers'] || 0,
+    marquee_qty: (addonQty['Marquee Letters/Numbers'] || 0) + (state.bookingType === 'venue' ? ({'The Elevated':2,'The Signature':4}[currentPackageName()] || 0) : 0),
     black_linen: addonQty['Black Linen'] || 0,
     white_linen: addonQty['White Linen'] || 0,
     extra_hours: addonQty['Additional Hour'] || 0
@@ -1686,20 +1784,28 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 
   let hadError = false;
   try {
-    await fetch(WEBHOOK_URL, {
+    const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+    if (!response.ok) throw new Error('Submission was not accepted');
   } catch(e){
     console.error('Booking submission failed', e);
     hadError = true;
+  }
+  if (hadError) {
+    const msg = document.getElementById('finalCheckMsg');
+    msg.style.display = 'block'; msg.className = 'avail-msg bad';
+    msg.textContent = 'Your request could not be confirmed. Please contact book@eleven27htx.com before retrying so we can check whether it was received.';
+    submitBtn.textContent = 'Request not confirmed — contact us';
+    return;
   }
 
   const isBooth = state.bookingType === 'booth';
   const priced = addons.filter(a => !a.customQuote);
   const addonsListHtml = priced.length
-    ? priced.map(a => `<div class="rev-row"><span>${a.name}${a.qty>1?` x${a.qty}`:''}</span><span>${fmtMoney(a.price)}</span></div>`).join('')
+    ? priced.map(a => `<div class="rev-row"><span>${a.name}${a.detail ? ` — ${a.detail}` : a.qty>1?` x${a.qty}`:''}</span><span>${fmtMoney(a.price)}</span></div>`).join('')
     : `<div class="rev-row"><span>Add-Ons</span><span>None selected</span></div>`;
 
   document.getElementById('confirmDetails').innerHTML = `
