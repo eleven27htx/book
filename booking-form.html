@@ -718,9 +718,9 @@
 const PRICING = {
   weekday: {
     ratePerHour: 100,
-    minHours: 4,
-    minTotal: 400,
-    note: 'Monday–Thursday. Friday before 4:00 PM at same rate.'
+    minHours: 6,
+    minTotal: 600,
+    note: 'Monday–Thursday. Friday morning reservations must finish by 3:00 PM.'
   },
   packages: {
     friday: [
@@ -948,7 +948,8 @@ async function fetchMonth(year, month){
   if (state.monthCache[key]) return state.monthCache[key];
   const res = await fetch(`${API_URL}?action=month&year=${year}&month=${month}`);
   const data = await res.json();
-  state.monthCache[key] = data.availability || {};
+  if (!data.success || !data.availability) throw new Error(data.error || 'Availability unavailable');
+  state.monthCache[key] = data.availability;
   return state.monthCache[key];
 }
 
@@ -973,9 +974,11 @@ async function renderCalendar(){
   grid.appendChild(loading);
 
   let availability = {};
+  let availabilityFailed = false;
   try {
     availability = await fetchMonth(state.currentYear, state.currentMonth);
   } catch(e) {
+    availabilityFailed = true;
     console.error('Failed to load availability', e);
   }
   if (myToken !== calendarRenderToken) return; // superseded by a newer render call; abandon
@@ -1004,11 +1007,13 @@ async function renderCalendar(){
       ? !!(info && info.boothAvailable === false)
       : !!(info && info.venueAvailable === false);
 
-    if (isPast){
+    if (availabilityFailed || !info){
+      el.classList.add('unavailable');el.title='Availability could not be verified. Please try again.';
+    } else if (isPast){
       el.classList.add('past');
     } else if (isBlocked){
       el.classList.add('unavailable');
-      el.title = 'Unavailable';
+      el.title = 'Unavailable — contact us for more details.';
     } else {
       el.classList.add('available');
       el.addEventListener('click', () => selectDate(state.currentYear, state.currentMonth, d, info || {venueAvailable:true, boothAvailable:true}));
@@ -1492,7 +1497,34 @@ document.getElementById('back4').addEventListener('click', () => goToStep(state.
 document.getElementById('back5').addEventListener('click', () => goToStep(4));
 
 // ---------- step 4 form ----------
+
+// Venue reservation policy: access includes setup, event, cleanup and checkout.
+function venueClosingMinute(date) {
+  const dow = new Date(date + 'T12:00:00Z').getUTCDay();
+  return dow === 5 || dow === 6 ? 1500 : 1380;
+}
+function venueSplitDay(date) {
+  return [0, 5, 6].includes(new Date(date + 'T12:00:00Z').getUTCDay());
+}
+function venueStartOptions(date, hours, fullDay, morningOnly) {
+  if (!Number.isFinite(hours) || hours < 6) return [];
+  const closing = venueClosingMinute(date);
+  const segments = venueSplitDay(date) && !fullDay
+    ? (morningOnly ? [[420, 900]] : [[420, 900], [960, closing]])
+    : [[420, closing]];
+  const starts = [];
+  segments.forEach(function(segment) {
+    for (let minute = segment[0]; minute + hours * 60 <= segment[1]; minute += 30) starts.push(minute);
+  });
+  return starts;
+}
+function venueRangeFree(date, start, end, busy) {
+  const gap = venueSplitDay(date) ? 60 : 0;
+  return !busy.some(function(range) { return start < range[1] + gap && end > range[0] - gap; });
+}
+
 function getStartTimeWindow(){
+  if (state.bookingType === 'venue' && state.package) return {earliest:420,latestStart:venueClosingMinute(state.selectedDateStr)-reservedHours()*60};
   if (!state.package || state.package.hours == null) return null;
   const hours = reservedHours();
   const isFridayHourly = state.bookingType === 'venue' && state.pricingTier === 'friday' && state.package.type === 'hourly';
@@ -1526,12 +1558,20 @@ function populateStartTimes(){
   sel.style.display = '';
   noSlotsEl.style.display = 'none';
   sel.innerHTML = '<option value="">Select a time</option>';
-  for (let mins = win.earliest; mins <= win.latestStart; mins += 30){
-    const opt = document.createElement('option');
-    opt.value = minutesToHHMM(mins);
-    opt.textContent = minutesToLabel(mins);
-    sel.appendChild(opt);
+  const candidates = [];
+  if (state.bookingType === 'venue') {
+    const hours = reservedHours();
+    const morningOnly = state.pricingTier === 'friday' && state.package.type === 'hourly';
+    const busy = state.selectedDayData && state.selectedDayData.venueBusy;
+    if (Array.isArray(busy)) venueStartOptions(state.selectedDateStr,hours,state.package.hours>=12,morningOnly)
+      .filter(minute=>venueRangeFree(state.selectedDateStr,minute,minute+hours*60,busy)).forEach(minute=>candidates.push(minute));
+  } else {
+    for (let minute=win.earliest;minute<=win.latestStart;minute+=30) candidates.push(minute);
   }
+  if (!candidates.length) { sel.style.display='none';noSlotsEl.style.display='block';return; }
+  candidates.forEach(mins=>{
+    const opt=document.createElement('option');opt.value=minutesToHHMM(mins);opt.textContent=minutesToLabel(mins);sel.appendChild(opt);
+  });
 
   if (unchanged && previousValue && [...sel.options].some(o => o.value === previousValue)){
     sel.value = previousValue;
@@ -1678,13 +1718,16 @@ async function runFinalCheck(){
   const end = minutesToHHMM(endTimeMinutes());
   const typeParam = state.bookingType === 'booth' ? '&type=booth' : '&type=venue';
   const boothTypeParam = state.bookingType === 'booth' && state.boothType ? `&boothType=${state.boothType}` : '';
+  const policyParam=state.bookingType==='venue'?`&base_hours=${state.package.hours}&extra_hours=${reservedHours()-state.package.hours}&morning_only=${state.pricingTier==='friday'&&state.package.type==='hourly'}`:'';
   try {
-    const res = await fetch(`${API_URL}?action=check&date=${state.selectedDateStr}&start=${start}&end=${end}${typeParam}${boothTypeParam}`);
+    const res = await fetch(`${API_URL}?action=check&date=${state.selectedDateStr}&start=${start}&end=${end}${typeParam}${boothTypeParam}${policyParam}`);
     const data = await res.json();
-    state.finalCheck = { checked:true, venueAvailable: data.venueAvailable !== false, boothAvailable: data.boothAvailable !== false };
+    if (!data.success || data.error) throw new Error(data.error || 'Availability unavailable');
+    state.finalCheck = { checked:true, venueAvailable: data.venueAvailable === true, boothAvailable: data.boothAvailable === true };
   } catch(e){
     console.error('Final availability check failed', e);
-    state.finalCheck = { checked:true, venueAvailable:true, boothAvailable:true };
+    state.finalCheck = {checked:false,venueAvailable:false,boothAvailable:false};
+    msgEl.className='avail-msg bad';msgEl.textContent='Availability could not be verified. Please try again before submitting.';submitBtn.disabled=true;return;
   }
 
   if (state.bookingType === 'booth'){
