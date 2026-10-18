@@ -631,8 +631,9 @@
               <div class="err">Enter a guest count between 1 and 100.</div>
             </div>
             <div class="field" data-field="startTime">
-              <label>Preferred Start Time *</label>
-              <select id="startTime"></select>
+              <label id="startTimeLabel" for="startTime">Preferred Venue Access Time *</label>
+              <select id="startTime" aria-describedby="venueAccessHelp"></select>
+              <div class="note" id="venueAccessHelp" style="margin-top:6px;">Choose the time you need to enter for setup and decorating. Your rental time includes setup, your event, and cleanup.</div>
               <div class="note" id="startEndPreview" style="margin-top:6px;display:none;"></div>
               <div class="avail-msg warn" id="noStartTimesMsg" style="display:none;">Please contact us directly to arrange this booking</div>
               <div class="err">Please select a start time.</div>
@@ -1541,6 +1542,8 @@ function getStartTimeWindow(){
 }
 
 function populateStartTimes(){
+  document.getElementById('startTimeLabel').textContent = state.bookingType === 'booth' ? 'Preferred Start Time *' : 'Preferred Venue Access Time *';
+  document.getElementById('venueAccessHelp').style.display = state.bookingType === 'booth' ? 'none' : 'block';
   const sel = document.getElementById('startTime');
   const previewEl = document.getElementById('startEndPreview');
   const noSlotsEl = document.getElementById('noStartTimesMsg');
