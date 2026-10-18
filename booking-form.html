@@ -527,7 +527,7 @@
           <h2>Select Your Package</h2>
           <div class="step-sub" id="pkgSub"></div>
           <div id="pkgContainer"></div>
-          <div class="note" id="pkgAddlHourNote">Additional hours available at $150/hour subject to availability.</div>
+          <div class="note" id="pkgAddlHourNote">Upgrade any 6-hour event to 12 total hours for $600. Individual additional hours remain $150/hour. Subject to availability and approval.</div>
           <div class="btn-row">
             <button class="btn btn-ghost" id="back2" type="button">Back</button>
             <button class="btn btn-primary" id="next2" disabled>Next</button>
@@ -718,30 +718,30 @@
 const PRICING = {
   weekday: {
     ratePerHour: 100,
-    minHours: 6,
-    minTotal: 600,
-    note: 'Monday–Thursday. Friday morning reservations must finish by 3:00 PM.'
+    minHours: 4,
+    minTotal: 400,
+    note: 'Monday–Thursday. Friday morning reservations must finish by 4:00 PM, including cleanup and departure.'
   },
   packages: {
     friday: [
       { name: 'The Space',     hours: 6,  price: 1050 },
-      { name: 'The Space',     hours: 12, price: 1750 },
+      { name: 'The Space',     hours: 12, price: 1650 },
       { name: 'The Elevated',    hours: 6,  price: 2800 },
-      { name: 'The Elevated',    hours: 12, price: 3500 },
+      { name: 'The Elevated',    hours: 12, price: 3400 },
       { name: 'The Signature', hours: 12, price: 4727 }
     ],
     saturday: [
       { name: 'The Space',     hours: 6,  price: 1250 },
-      { name: 'The Space',     hours: 12, price: 2050 },
+      { name: 'The Space',     hours: 12, price: 1850 },
       { name: 'The Elevated',    hours: 6,  price: 3100 },
-      { name: 'The Elevated',    hours: 12, price: 3900 },
+      { name: 'The Elevated',    hours: 12, price: 3700 },
       { name: 'The Signature', hours: 12, price: 5027 }
     ],
     sunday: [
       { name: 'The Space',     hours: 6,  price: 1050 },
-      { name: 'The Space',     hours: 12, price: 1750 },
+      { name: 'The Space',     hours: 12, price: 1650 },
       { name: 'The Elevated',    hours: 6,  price: 2800 },
-      { name: 'The Elevated',    hours: 12, price: 3500 },
+      { name: 'The Elevated',    hours: 12, price: 3400 },
       { name: 'The Signature', hours: 12, price: 4727 }
     ]
   },
@@ -754,6 +754,7 @@ const PRICING = {
     { name: 'Marquee Letters/Numbers',  price: 40,   perUnit: true,  maxQty: 10, includedQty: { 'The Elevated': 2, 'The Signature': 4 } },
     { name: 'Black Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'White Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
+    { name: 'Full-Day Upgrade', price: 600, perUnit: false },
     { name: 'Additional Hour',          price: 150,  perUnit: true,  maxQty: 4  },
     { name: 'Bartender',                price: 0,    customQuote: true },
     { name: 'Security',                 price: 50,   security: true },
@@ -800,7 +801,8 @@ const ADDON_DESCRIPTIONS = {
   'Marquee Letters/Numbers': 'Light-up marquee letters or numbers, priced per piece.',
   'Black Linen': 'Black linen tablecloths, priced per linen.',
   'White Linen': 'White linen tablecloths, priced per linen.',
-  'Additional Hour': 'Extend your rental beyond your package hours.',
+  'Full-Day Upgrade': 'Add 6 hours to any 6-hour venue event for 12 total hours. $600, subject to availability and approval. Replaces individually selected extra hours.',
+  'Additional Hour': 'Extend your rental at $150 per hour, subject to availability and approval.',
   'Bartender': 'Professional bartending service for your event.',
   'Security': '$50 per officer per required event hour. Excludes setup and breakdown. 1 officer for up to 80 guests; 2 officers for 81 or more. Must be booked through Eleven 27; coverage is subject to venue approval.',
   'Full Service Event Planning': 'Full-service event planning, including day-of and vendor coordination. Coordination is included in this price.',
@@ -1162,6 +1164,7 @@ function renderAddons(){
   const boothAvailable = state.selectedDayData ? state.selectedDayData.boothAvailable !== false : true;
 
   PRICING.addons.forEach(addon => {
+    if (addon.name === 'Full-Day Upgrade' && (!state.package || state.package.hours !== 6)) { state.addons[addon.name].selected = false; return; }
     const s = state.addons[addon.name];
     const included = addonIsIncluded(addon);
     const isBooth = addon.name.includes('Magazine Booth');
@@ -1215,6 +1218,8 @@ function renderAddons(){
       card.addEventListener('click', (e) => {
         if (e.target.dataset.act) return;
         s.selected = !s.selected;
+        if (s.selected && addon.name === 'Full-Day Upgrade') state.addons['Additional Hour'].selected = false;
+        if (s.selected && addon.name === 'Additional Hour') state.addons['Full-Day Upgrade'].selected = false;
         if (addon.perUnit && s.selected && !s.qty) s.qty = 1;
         renderAddons();
         updateSummary();
@@ -1258,7 +1263,8 @@ function getSelectedAddons(){
 }
 
 function reservedHours(){
-  const extra = state.bookingType === 'venue' && state.addons['Additional Hour'].selected ? state.addons['Additional Hour'].qty : 0;
+  const upgrade = state.bookingType === 'venue' && state.package && state.package.hours === 6 && state.addons['Full-Day Upgrade'].selected;
+  const extra = upgrade ? 6 : state.bookingType === 'venue' && state.addons['Additional Hour'].selected ? state.addons['Additional Hour'].qty : 0;
   return (state.package ? state.package.hours : 0) + extra;
 }
 function securityCost(){
@@ -1507,14 +1513,14 @@ function venueSplitDay(date) {
   return [0, 5, 6].includes(new Date(date + 'T12:00:00Z').getUTCDay());
 }
 function venueStartOptions(date, hours, fullDay, morningOnly) {
-  if (!Number.isFinite(hours) || hours < 6) return [];
+  if (!Number.isFinite(hours) || hours < 4) return [];
   const closing = venueClosingMinute(date);
   const segments = venueSplitDay(date) && !fullDay
-    ? (morningOnly ? [[420, 900]] : [[420, 900], [960, closing]])
+    ? (morningOnly ? [[420, 960]] : [[420, 960], [1020, closing]])
     : [[420, closing]];
   const starts = [];
   segments.forEach(function(segment) {
-    for (let minute = segment[0]; minute + hours * 60 <= segment[1]; minute += 30) starts.push(minute);
+    for (let minute = segment[0]; minute + hours * 60 <= segment[1]; minute += 30) { if (!venueSplitDay(date) || fullDay || minute < 960 || [1020,1080,1140].includes(minute)) starts.push(minute); }
   });
   return starts;
 }
@@ -1539,7 +1545,7 @@ function populateStartTimes(){
   const previewEl = document.getElementById('startEndPreview');
   const noSlotsEl = document.getElementById('noStartTimesMsg');
 
-  const signature = `${state.bookingType}|${state.pricingTier}|${state.package ? state.package.type : ''}|${state.package ? reservedHours() : ''}|${state.dayOfWeek}`;
+  const signature = `${state.bookingType}|${state.pricingTier}|${state.package ? state.package.type : ''}|${state.package ? reservedHours() : ''}|${state.dayOfWeek}|${state.selectedDateStr}`;
   const unchanged = state._startTimeSignature === signature;
   const previousValue = sel.value;
   state._startTimeSignature = signature;
@@ -1563,7 +1569,7 @@ function populateStartTimes(){
     const hours = reservedHours();
     const morningOnly = state.pricingTier === 'friday' && state.package.type === 'hourly';
     const busy = state.selectedDayData && state.selectedDayData.venueBusy;
-    if (Array.isArray(busy)) venueStartOptions(state.selectedDateStr,hours,state.package.hours>=12,morningOnly)
+    if (Array.isArray(busy)) venueStartOptions(state.selectedDateStr,hours,state.package.hours>=12 || hours>state.package.hours,morningOnly)
       .filter(minute=>venueRangeFree(state.selectedDateStr,minute,minute+hours*60,busy)).forEach(minute=>candidates.push(minute));
   } else {
     for (let minute=win.earliest;minute<=win.latestStart;minute+=30) candidates.push(minute);
@@ -1774,7 +1780,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const addons = getSelectedAddons();
 
   const additionalHoursQty = (addons.find(a => a.name === 'Additional Hour') || {}).qty || 0;
-  const rentalLength = `${state.package.hours + additionalHoursQty} Hours`;
+  const rentalLength = `${reservedHours()} Hours`;
   const opportunityName = `${state.selectedDateStr} — ${state.form.lastName} — ${state.package.name}`;
 
   const includedAddons = PRICING.addons.filter(a => addonIsIncluded(a)).map(a => a.name);
@@ -1799,7 +1805,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     event_type_other: state.form.eventType === 'Other' ? state.form.eventTypeOther : '',
     guests: state.form.guestCount,
     notes: [state.form.additionalInfo, state.bookingType === 'venue' ? 'Package: ' + state.package.name + ' (' + state.package.hours + ' hours); base price: ' + fmtMoney(state.package.price) + '. Included services: ' + (PACKAGE_INCLUDES[state.package.name] || []).join('; ') : '', state.addons.Security.selected && state.bookingType === 'venue' ? 'Security: ' + state.securityOfficers + ' officer(s), ' + state.securityHours + ' event coverage hours (excluding setup/breakdown), ' + fmtMoney(securityCost()) + '.' : ''].filter(Boolean).join('\n'),
-    pricing_version: '2026-10-01',
+    pricing_version: '2026-10-18',
     package_hours: state.package.hours,
     addons_detail: addons,
     security_officers: state.bookingType === 'venue' && state.addons.Security.selected ? state.securityOfficers : 0,
@@ -1835,7 +1841,8 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     marquee_qty: (addonQty['Marquee Letters/Numbers'] || 0) + (state.bookingType === 'venue' ? ({'The Elevated':2,'The Signature':4}[currentPackageName()] || 0) : 0),
     black_linen: addonQty['Black Linen'] || 0,
     white_linen: addonQty['White Linen'] || 0,
-    extra_hours: addonQty['Additional Hour'] || 0
+    extra_hours: reservedHours() - state.package.hours,
+    full_day_upgrade: addonQty['Full-Day Upgrade'] ? 'Yes' : 'No'
   };
 
   let hadError = false;
