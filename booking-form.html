@@ -747,11 +747,12 @@ const PRICING = {
     ]
   },
   addons: [
+    { name: 'Custom Floor Plan & Table Setup', price: 100, perUnit: false, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'Post Event Cleaning',      price: 200,  perUnit: false, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'Mini Magazine Booth',      price: 200,  perUnit: false, includedIn: ['The Elevated'] },
     { name: 'Full Size Magazine Booth', price: 400,  perUnit: false, includedIn: ['The Signature'] },
     { name: 'Chafing Dish Package',     price: 125,  perUnit: false },
-    { name: 'Cocktail Tables',          price: 10,   perUnit: true,  maxQty: 6 },
+    { name: 'Cocktail Tables',          price: 10,   perUnit: true,  maxQty: 6, includedIn: ['The Signature'] },
     { name: 'Marquee Letters/Numbers',  price: 40,   perUnit: true,  maxQty: 10, includedQty: { 'The Elevated': 2, 'The Signature': 4 } },
     { name: 'Black Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'White Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
@@ -798,7 +799,8 @@ const ADDON_DESCRIPTIONS = {
   'Mini Magazine Booth': 'A compact photo/magazine-cover booth for your guests.',
   'Full Size Magazine Booth': 'Our full-size magazine cover photo booth experience.',
   'Chafing Dish Package': 'Chafing dishes and warming setup for catered food.',
-  'Cocktail Tables': 'High-top cocktail tables, priced per table.',
+  'Cocktail Tables': 'High-top cocktail tables (Add On/6 available). Included with The Signature; otherwise $10 per table.',
+  'Custom Floor Plan & Table Setup': 'Custom floor plan layout and table setup: $100 add-on for The Space. Included with The Elevated and The Signature.',
   'Marquee Letters/Numbers': 'Light-up marquee letters or numbers, priced per piece.',
   'Black Linen': 'Black linen tablecloths, priced per linen.',
   'White Linen': 'White linen tablecloths, priced per linen.',
@@ -817,8 +819,8 @@ const ADDON_DESCRIPTIONS = {
 const PACKAGE_INCLUDES = {
   "The Space": [
     "Up to 100 clear acrylic chairs",
-    "Tables and standard table and chair setup",
-    "10 round tables, 2 eight-foot and 4 six-foot rectangle tables",
+    "Tables provided; custom floor plan layout and table setup available as a $100 add-on",
+    "10 round 60-inch tables (seats 8–10 people per table), 2 eight-foot and 4 six-foot rectangle tables",
     "Kitchenette access",
     "Wi-Fi, speaker, and microphone",
     "On-site parking and ADA-accessible restrooms",
@@ -828,13 +830,12 @@ const PACKAGE_INCLUDES = {
   ],
   "The Elevated": [
     "Up to 100 clear acrylic chairs",
-    "Tables and standard table and chair setup",
-    "10 round tables, 2 eight-foot and 4 six-foot rectangle tables",
+    "Custom floor plan layout and table setup",
+    "10 round 60-inch tables (seats 8–10 people per table), 2 eight-foot and 4 six-foot rectangle tables",
     "Kitchenette access",
     "Wi-Fi, speaker, and microphone",
     "On-site parking and ADA-accessible restrooms",
     "Outside vendors welcome under venue guidelines",
-    "Custom floor plan design",
     "Standard linens in your choice of color for guest, buffet, cake, and gift tables",
     "10 standard centerpieces",
     "Installed 10–12 ft balloon backdrop",
@@ -848,13 +849,14 @@ const PACKAGE_INCLUDES = {
   ],
   "The Signature": [
     "Up to 100 clear acrylic chairs",
-    "Tables and standard table and chair setup",
-    "10 round tables, 2 eight-foot and 4 six-foot rectangle tables",
+    "Custom floor plan layout and table setup",
+    "10 round 60-inch tables (seats 8–10 people per table), 2 eight-foot and 4 six-foot rectangle tables",
     "Kitchenette access",
     "Wi-Fi, speaker, and microphone",
     "On-site parking and ADA-accessible restrooms",
     "Outside vendors welcome under venue guidelines",
-    "12 hours included and a custom floor plan",
+    "12 hours included",
+    "Cocktail tables included (up to 6 available)",
     "Specialty linens for guest tables; standard linens for buffet, cake, and gift tables",
     "Five large and five standard centerpieces",
     "Installed 15–18 ft balloon backdrop",
@@ -1177,7 +1179,7 @@ function renderAddons(){
     else if (s.selected) card.classList.add('selected');
     if (boothLimited) card.classList.add('dimmed');
 
-    let priceLabel = addon.security ? '$50/officer/hour' : addon.customQuote ? 'Custom Quote' : (addon.perUnit ? `${fmtMoney(addonPrice(addon))}/ea` : fmtMoney(addonPrice(addon)));
+    let priceLabel = included ? 'Included' : addon.security ? '$50/officer/hour' : addon.customQuote ? 'Custom Quote' : (addon.perUnit ? `${fmtMoney(addonPrice(addon))}/ea` : fmtMoney(addonPrice(addon)));
     let bodyExtra = '';
     if (included){
       bodyExtra = '<div class="addon-included-tag">&#10003; ' + (addon.includedIn && addon.includedIn.includes(pkgName) ? 'Included in your package' : 'Included with Full Service Event Planning') + '</div>';
@@ -1840,7 +1842,8 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     dj: selectedAddons.includes('DJ') ? 'Yes' : 'No',
     photography: selectedAddons.includes('Photography') ? 'Yes' : 'No',
     videography: selectedAddons.includes('Videography') ? 'Yes' : 'No',
-    cocktail_qty: addonQty['Cocktail Tables'] || 0,
+    cocktail_qty: state.bookingType === 'venue' && currentPackageName() === 'The Signature' ? 6 : (addonQty['Cocktail Tables'] || 0),
+    custom_floor_plan_table_setup: selectedAddons.includes('Custom Floor Plan & Table Setup') ? 'Yes' : 'No',
     marquee_qty: (addonQty['Marquee Letters/Numbers'] || 0) + (state.bookingType === 'venue' ? ({'The Elevated':2,'The Signature':4}[currentPackageName()] || 0) : 0),
     black_linen: addonQty['Black Linen'] || 0,
     white_linen: addonQty['White Linen'] || 0,
