@@ -747,6 +747,7 @@ const PRICING = {
     ]
   },
   addons: [
+    { name: 'Wine Cart', price: 50, perUnit: false },
     { name: 'Custom Floor Plan & Table Setup', price: 100, perUnit: false, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'Post Event Cleaning',      price: 200,  perUnit: false, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'Mini Magazine Booth',      price: 200,  perUnit: false, includedIn: ['The Elevated'] },
@@ -795,6 +796,7 @@ const PRICING = {
 // ============================================================
 
 const ADDON_DESCRIPTIONS = {
+  'Wine Cart': 'Compact decorative wine and beverage cart available for use during your event. Beverages, glassware, and styling are not included.',
   'Post Event Cleaning': 'Ordinary post-event cleaning. Customers and vendors must still remove food, decor, rentals, belongings, and equipment within the reserved time.',
   'Mini Magazine Booth': 'A compact photo/magazine-cover booth for your guests.',
   'Full Size Magazine Booth': 'Our full-size magazine cover photo booth experience.',
@@ -818,22 +820,26 @@ const ADDON_DESCRIPTIONS = {
 
 const PACKAGE_INCLUDES = {
   "The Space": [
-    "Up to 100 clear acrylic chairs",
+    "100 clear acrylic chairs",
     "Tables provided; custom floor plan layout and table setup available as a $100 add-on",
     "10 round 60-inch tables (seats 8–10 people per table), 2 eight-foot and 4 six-foot rectangle tables",
-    "Kitchenette access",
-    "Wi-Fi, speaker, and microphone",
+    "Kitchenette with microwave, catering food warmer, prep table, and refrigerator",
+    "TVs",
+    "Mobile Bar Station — Included. Complimentary 4ft collapsible mobile bar station available for guest beverage service. Bartender, beverages, and applicable security are not included.",
+    "Wi-Fi, Bluetooth speaker and microphone",
     "On-site parking and ADA-accessible restrooms",
     "Outside vendors welcome under venue guidelines",
     "Decor, linens, a Magazine Booth, and ordinary post-event cleaning are not included",
     "All setup, breakdown, cleaning, and checkout must fit within reserved hours"
   ],
   "The Elevated": [
-    "Up to 100 clear acrylic chairs",
+    "100 clear acrylic chairs",
     "Custom floor plan layout and table setup",
     "10 round 60-inch tables (seats 8–10 people per table), 2 eight-foot and 4 six-foot rectangle tables",
-    "Kitchenette access",
-    "Wi-Fi, speaker, and microphone",
+    "Kitchenette with microwave, catering food warmer, prep table, and refrigerator",
+    "TVs",
+    "Mobile Bar Station — Included. Complimentary 4ft collapsible mobile bar station available for guest beverage service. Bartender, beverages, and applicable security are not included.",
+    "Wi-Fi, Bluetooth speaker and microphone",
     "On-site parking and ADA-accessible restrooms",
     "Outside vendors welcome under venue guidelines",
     "Standard linens in your choice of color for guest, buffet, cake, and gift tables",
@@ -848,11 +854,13 @@ const PACKAGE_INCLUDES = {
     "Booth handling, linen care, venue labor, and ordinary post-event cleaning"
   ],
   "The Signature": [
-    "Up to 100 clear acrylic chairs",
+    "100 clear acrylic chairs",
     "Custom floor plan layout and table setup",
     "10 round 60-inch tables (seats 8–10 people per table), 2 eight-foot and 4 six-foot rectangle tables",
-    "Kitchenette access",
-    "Wi-Fi, speaker, and microphone",
+    "Kitchenette with microwave, catering food warmer, prep table, and refrigerator",
+    "TVs",
+    "Mobile Bar Station — Included. Complimentary 4ft collapsible mobile bar station available for guest beverage service. Bartender, beverages, and applicable security are not included.",
+    "Wi-Fi, Bluetooth speaker and microphone",
     "On-site parking and ADA-accessible restrooms",
     "Outside vendors welcome under venue guidelines",
     "12 hours included",
@@ -1095,9 +1103,10 @@ function renderPackages(){
           <button type="button" id="hourPlus">+</button>
         </div>
         <div class="pkg-price">${fmtMoney(total)}</div>
-      </div>`;
+      </div>
+      <details class="package-details"><summary>What's Included With The Space</summary><ul class="pkg-includes">${PACKAGE_INCLUDES["The Space"].map(i=>`<li>${i}</li>`).join('')}</ul></details>`;
     box.addEventListener('click', (e) => {
-      if (e.target.id === 'hourMinus' || e.target.id === 'hourPlus') return;
+      if (e.target.id === 'hourMinus' || e.target.id === 'hourPlus' || e.target.closest('details')) return;
       selectPackage({ type:'hourly', name:'Hourly Rental', hours: state.hourlyHours, price: Math.max(state.hourlyHours*PRICING.weekday.ratePerHour, PRICING.weekday.minTotal) });
     });
     container.appendChild(box);
