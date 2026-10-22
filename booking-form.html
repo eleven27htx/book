@@ -1429,6 +1429,12 @@ function renderBoothOptions(){
       <ul class="pkg-includes">${commonIncludes.concat(opt.extra).map(i=>`<li>${i}</li>`).join('')}</ul>
     `;
     card.addEventListener('click', () => {
+      if (state.boothType !== opt.key) {
+        state.selectedDateStr = null;
+        state.selectedDayData = null;
+        document.getElementById('selectedDateInfo').style.display = 'none';
+        document.getElementById('next1').disabled = true;
+      }
       state.boothType = opt.key;
       state.package = { type:'booth', name: opt.cfg.name, hours: BOOTH_ONLY_HOURS, price: opt.cfg.price, customQuote:false };
       document.getElementById('nextBoothSelect').disabled = false;
@@ -1492,6 +1498,7 @@ function goToStep(n){
   window.scrollTo({top:0, behavior:'smooth'});
 
   if (n === 1){
+    renderCalendar();
     document.getElementById('changeBookingType').style.display = state.bookingType === 'booth' ? 'none' : '';
     document.getElementById('backToBoothSelect').style.display = state.bookingType === 'booth' ? '' : 'none';
   }
