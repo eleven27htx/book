@@ -958,12 +958,20 @@ function minutesToEndLabel(mins){
 }
 
 // ---------- calendar ----------
+// Open house: close rental requests while leaving the separate tour calendar free.
+const RENTAL_CLOSED_DATES = new Set(['2026-11-27']);
+
 async function fetchMonth(year, month){
   const key = `${year}-${month}`;
   if (state.monthCache[key]) return state.monthCache[key];
   const res = await fetch(`${API_URL}?action=month&year=${year}&month=${month}`);
   const data = await res.json();
   if (!data.success || !data.availability) throw new Error(data.error || 'Availability unavailable');
+  Object.keys(data.availability).forEach(date => {
+    if (RENTAL_CLOSED_DATES.has(date)) {
+      Object.assign(data.availability[date], {venueAvailable:false, boothAvailable:false, miniBoothAvailable:false, fullSizeBoothAvailable:false});
+    }
+  });
   state.monthCache[key] = data.availability;
   return state.monthCache[key];
 }
@@ -1040,6 +1048,7 @@ async function renderCalendar(){
 }
 
 function selectDate(y, m, d, info){
+  if (RENTAL_CLOSED_DATES.has(dateKey(y,m,d))) return;
   state.selectedDateStr = dateKey(y,m,d);
   state.selectedDayData = info;
   const dow = new Date(y, m-1, d).getDay();
@@ -1742,6 +1751,13 @@ async function runFinalCheck(){
   submitBtn.disabled = true;
   msgEl.className = 'avail-msg checking';
   msgEl.textContent = 'Checking final availability...';
+  if (RENTAL_CLOSED_DATES.has(state.selectedDateStr)) {
+    state.finalCheck = {checked:true,venueAvailable:false,boothAvailable:false};
+    msgEl.style.display = 'block';
+    msgEl.className = 'avail-msg bad';
+    msgEl.textContent = 'November 27 is reserved for our open house, 2–6:30 PM. Tours are welcome; venue and magazine booth rentals are unavailable.';
+    return;
+  }
 
   const start = state.form.startTime;
   const end = minutesToHHMM(endTimeMinutes());
@@ -1793,6 +1809,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
 
+  if (RENTAL_CLOSED_DATES.has(state.selectedDateStr)) { runFinalCheck(); return; }
   if (!validSecurity() || !state.package || !state.selectedDateStr) { submitBtn.disabled = false; return; }
 
   const [y,mo,d] = state.selectedDateStr.split('-').map(Number);
