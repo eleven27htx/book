@@ -1019,7 +1019,7 @@ async function renderCalendar(){
     const isPast = thisDate < todayFloor;
 
     const isBlocked = state.bookingType === 'booth'
-      ? !!(info && info.boothAvailable === false)
+      ? !!(info && (state.boothType === 'mini' ? info.miniBoothAvailable === false : state.boothType === 'fullSize' ? info.fullSizeBoothAvailable === false : info.boothAvailable === false))
       : !!(info && info.venueAvailable === false);
 
     if (availabilityFailed || !info){
@@ -1175,14 +1175,14 @@ function renderAddons(){
   const grid = document.getElementById('addonGrid');
   grid.innerHTML = '';
   const pkgName = currentPackageName();
-  const boothAvailable = state.selectedDayData ? state.selectedDayData.boothAvailable !== false : true;
+  const boothDay = state.selectedDayData || {};
 
   PRICING.addons.forEach(addon => {
     if (addon.name === 'Full-Day Upgrade' && (!state.package || state.package.hours !== 6)) { state.addons[addon.name].selected = false; return; }
     const s = state.addons[addon.name];
     const included = addonIsIncluded(addon);
     const isBooth = addon.name.includes('Magazine Booth');
-    const boothLimited = isBooth && !boothAvailable;
+    const boothLimited = isBooth && (addon.name === 'Mini Magazine Booth' ? boothDay.miniBoothAvailable === false : boothDay.fullSizeBoothAvailable === false);
 
     const card = document.createElement('div');
     card.className = 'addon-card';
