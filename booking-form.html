@@ -727,24 +727,24 @@ const PRICING = {
   },
   packages: {
     friday: [
-      { name: 'The Space',     hours: 6,  price: 1050 },
-      { name: 'The Space',     hours: 12, price: 1650 },
-      { name: 'The Elevated',    hours: 6,  price: 2800 },
-      { name: 'The Elevated',    hours: 12, price: 3400 },
+      { name: 'The Space',     hours: 6,  price: 1250 },
+      { name: 'The Space',     hours: 12, price: 1850 },
+      { name: 'The Elevated',    hours: 6,  price: 3000 },
+      { name: 'The Elevated',    hours: 12, price: 3600 },
       { name: 'The Signature', hours: 12, price: 4727 }
     ],
     saturday: [
-      { name: 'The Space',     hours: 6,  price: 1250 },
-      { name: 'The Space',     hours: 12, price: 1850 },
-      { name: 'The Elevated',    hours: 6,  price: 3100 },
-      { name: 'The Elevated',    hours: 12, price: 3700 },
+      { name: 'The Space',     hours: 6,  price: 1450 },
+      { name: 'The Space',     hours: 12, price: 2050 },
+      { name: 'The Elevated',    hours: 6,  price: 3300 },
+      { name: 'The Elevated',    hours: 12, price: 3900 },
       { name: 'The Signature', hours: 12, price: 5027 }
     ],
     sunday: [
-      { name: 'The Space',     hours: 6,  price: 1050 },
-      { name: 'The Space',     hours: 12, price: 1650 },
-      { name: 'The Elevated',    hours: 6,  price: 2800 },
-      { name: 'The Elevated',    hours: 12, price: 3400 },
+      { name: 'The Space',     hours: 6,  price: 1250 },
+      { name: 'The Space',     hours: 12, price: 1850 },
+      { name: 'The Elevated',    hours: 6,  price: 3000 },
+      { name: 'The Elevated',    hours: 12, price: 3600 },
       { name: 'The Signature', hours: 12, price: 4727 }
     ]
   },
@@ -755,14 +755,14 @@ const PRICING = {
     { name: 'Mini Magazine Booth',      price: 200,  perUnit: false, includedIn: ['The Elevated'] },
     { name: 'Full Size Magazine Booth', price: 400,  perUnit: false, includedIn: ['The Signature'] },
     { name: 'Chafing Dish Package',     price: 125,  perUnit: false },
-    { name: 'Cocktail Tables',          price: 10,   perUnit: true,  maxQty: 6, includedIn: ['The Signature'] },
+    { name: 'Cocktail Tables',          price: 12,   perUnit: true,  maxQty: 6, includedIn: ['The Signature'] },
     { name: 'Marquee Letters/Numbers',  price: 40,   perUnit: true,  maxQty: 10, includedQty: { 'The Elevated': 2, 'The Signature': 4 } },
     { name: 'Black Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'White Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'Full-Day Upgrade', price: 600, perUnit: false },
     { name: 'Additional Hour',          price: 150,  perUnit: true,  maxQty: 4  },
     { name: 'Bartender',                price: 0,    customQuote: true },
-    { name: 'Security',                 price: 50,   security: true },
+    { name: 'Security',                 price: 50,   security: true, includedIn: ['The Space', 'The Elevated', 'The Signature'] },
     { name: 'Full Service Event Planning',           price: 927, packagePrices: { 'The Signature': 400 } },
     { name: 'Day of/Vendor Coordination',       price: 527,  includedIn: ['The Signature'] },
     { name: 'Catering',                 price: 0,    customQuote: true },
@@ -803,7 +803,7 @@ const ADDON_DESCRIPTIONS = {
   'Mini Magazine Booth': 'A compact photo/magazine-cover booth for your guests. Custom wording includes one heading plus up to 6 phrases or 20 words. Additional wording incurs a $100 charge.',
   'Full Size Magazine Booth': 'Our full-size magazine cover photo booth experience. Custom wording includes one heading plus up to 6 phrases or 20 words. Additional wording incurs a $100 charge.',
   'Chafing Dish Package': 'Chafing dishes and warming setup for catered food.',
-  'Cocktail Tables': 'High-top cocktail tables (Add On/6 available). Included with The Signature; otherwise $10 per table.',
+  'Cocktail Tables': 'High-top cocktail tables (Add On/6 available). Included with The Signature; otherwise $12 per table including linen.',
   'Custom Floor Plan & Table Setup': 'Custom floor plan layout and table setup: $100 add-on for The Space. Included with The Elevated and The Signature.',
   'Marquee Letters/Numbers': 'Light-up marquee letters or numbers, priced per piece.',
   'Black Linen': 'Black linen tablecloths, priced per linen.',
@@ -811,7 +811,7 @@ const ADDON_DESCRIPTIONS = {
   'Full-Day Upgrade': 'Add 6 hours to any 6-hour venue event for 12 total hours. $600, subject to availability and approval. Replaces individually selected extra hours.',
   'Additional Hour': 'Extend your rental at $150 per hour, subject to availability and approval.',
   'Bartender': 'Professional bartending service for your event.',
-  'Security': '$50 per officer per required event hour. Excludes setup and breakdown. 1 officer for up to 80 guests; 2 officers for 81 or more. Must be booked through Eleven 27; coverage is subject to venue approval.',
+  'Security': 'Included with every venue package and arranged through Eleven 27. 1 officer for up to 80 guests; 2 officers for 81 or more. Event coverage excludes setup and breakdown and is subject to venue approval.',
   'Full Service Event Planning': 'Full-service event planning, including day-of and vendor coordination. Coordination is included in this price.',
   'Day of/Vendor Coordination': 'Day-of and vendor coordination to keep your event on track.',
   'Catering': 'Catering options tailored to your guest count.',
@@ -827,7 +827,7 @@ const PACKAGE_INCLUDES = {
     "10 round 60-inch tables (seats 8–10 people per table), 2 eight-foot and 4 six-foot rectangle tables",
     "Kitchenette with microwave, catering food warmer, prep table, and refrigerator",
     "TVs",
-    "Mobile Bar Station — Included. Complimentary 4ft collapsible mobile bar station available for guest beverage service. Bartender, beverages, and applicable security are not included.",
+    "Mobile Bar Station — Included. Complimentary 4ft collapsible mobile bar station available for guest beverage service. Bartender and beverages are not included. Security is included with every venue package.",
     "Wi-Fi, Bluetooth speaker and microphone",
     "On-site parking and ADA-accessible restrooms",
     "Outside vendors welcome under venue guidelines",
@@ -840,7 +840,7 @@ const PACKAGE_INCLUDES = {
     "10 round 60-inch tables (seats 8–10 people per table), 2 eight-foot and 4 six-foot rectangle tables",
     "Kitchenette with microwave, catering food warmer, prep table, and refrigerator",
     "TVs",
-    "Mobile Bar Station — Included. Complimentary 4ft collapsible mobile bar station available for guest beverage service. Bartender, beverages, and applicable security are not included.",
+    "Mobile Bar Station — Included. Complimentary 4ft collapsible mobile bar station available for guest beverage service. Bartender and beverages are not included. Security is included with every venue package.",
     "Wi-Fi, Bluetooth speaker and microphone",
     "On-site parking and ADA-accessible restrooms",
     "Outside vendors welcome under venue guidelines",
@@ -861,7 +861,7 @@ const PACKAGE_INCLUDES = {
     "10 round 60-inch tables (seats 8–10 people per table), 2 eight-foot and 4 six-foot rectangle tables",
     "Kitchenette with microwave, catering food warmer, prep table, and refrigerator",
     "TVs",
-    "Mobile Bar Station — Included. Complimentary 4ft collapsible mobile bar station available for guest beverage service. Bartender, beverages, and applicable security are not included.",
+    "Mobile Bar Station — Included. Complimentary 4ft collapsible mobile bar station available for guest beverage service. Bartender and beverages are not included. Security is included with every venue package.",
     "Wi-Fi, Bluetooth speaker and microphone",
     "On-site parking and ADA-accessible restrooms",
     "Outside vendors welcome under venue guidelines",
@@ -1291,14 +1291,15 @@ function reservedHours(){
   return (state.package ? state.package.hours : 0) + extra;
 }
 function securityCost(){
+  if (state.package && addonIsIncluded(PRICING.addons.find(a => a.name === 'Security'))) return 0;
   return state.bookingType === 'venue' && state.addons.Security.selected ? 50 * state.securityOfficers * state.securityHours : 0;
 }
 function renderSecurity(){
-  document.getElementById('securityFields').style.display = state.addons.Security.selected ? 'block' : 'none';
+  document.getElementById('securityFields').style.display = state.addons.Security.selected && !addonIsIncluded(PRICING.addons.find(a => a.name === 'Security')) ? 'block' : 'none';
   document.getElementById('securityCost').textContent = state.securityHours > 0 ? fmtMoney(securityCost()) + ' security total' : 'Enter required event coverage hours to calculate security.';
 }
 function validSecurity(){
-  if (state.bookingType !== 'venue' || !state.addons.Security.selected) return true;
+  if (state.bookingType !== 'venue' || addonIsIncluded(PRICING.addons.find(a => a.name === 'Security')) || !state.addons.Security.selected) return true;
   return Number.isInteger(state.securityOfficers) && (state.securityOfficers === 1 || state.securityOfficers === 2) &&
     Number.isFinite(state.securityHours) && state.securityHours > 0 &&
     Number.isInteger(state.securityHours * 2) && state.securityHours <= reservedHours();
@@ -1845,7 +1846,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     event_type_other: state.form.eventType === 'Other' ? state.form.eventTypeOther : '',
     guests: state.form.guestCount,
     notes: [state.form.additionalInfo, state.bookingType === 'venue' ? 'Package: ' + state.package.name + ' (' + state.package.hours + ' hours); base price: ' + fmtMoney(state.package.price) + '. Included services: ' + (PACKAGE_INCLUDES[state.package.name] || []).join('; ') : '', state.addons.Security.selected && state.bookingType === 'venue' ? 'Security: ' + state.securityOfficers + ' officer(s), ' + state.securityHours + ' event coverage hours (excluding setup/breakdown), ' + fmtMoney(securityCost()) + '.' : ''].filter(Boolean).join('\n'),
-    pricing_version: '2026-10-18',
+    pricing_version: '2026-10-30',
     package_hours: state.package.hours,
     addons_detail: addons,
     security_officers: state.bookingType === 'venue' && state.addons.Security.selected ? state.securityOfficers : 0,
