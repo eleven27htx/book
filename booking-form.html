@@ -465,6 +465,7 @@
   <div class="header">
     <div class="logo">Eleven<span class="num">27</span></div>
     <div class="tagline">Elevated Events. Affordable Luxury.</div>
+    <p class="note">Check availability for your event. Submitting this form sends an inquiry; your booking is confirmed after approval, agreement, and payment.</p>
   </div>
 
   <div class="landing-cards" id="landingScreen">
@@ -493,7 +494,7 @@
           <h2>Select Your Booth</h2>
           <div class="step-sub">Choose which Magazine Booth you'd like to reserve.</div>
           <div class="pkg-grid" id="boothTypeContainer"></div>
-          <p class="note">Custom wording includes one heading plus up to 6 phrases or 20 words. Additional wording incurs a $100 charge.</p>
+          <p class="note">Custom wording includes one heading plus up to 6 phrases or 20 words. Additional wording may incur an extra fee.</p>
           <label class="field" style="display:flex;align-items:center;gap:10px;flex-direction:row;margin-top:20px;">
             <input type="checkbox" id="outsideDeliveryArea" style="width:auto;">
             <span style="font-size:13px;color:var(--muted);text-transform:none;">My event is outside 30 minutes of Spring, TX 77373 (+$75 delivery fee)</span>
@@ -611,7 +612,7 @@
                 <label>Custom Wording for Cover *</label>
                 <input type="text" id="customWordingRequest" placeholder="e.g. Johnson Baby Shower, October 2026">
                 <div class="note" style="margin-top:6px;">This will appear on the front cover of your magazine booth. Black or white background available.</div>
-                <p class="note">Custom wording includes one heading plus up to 6 phrases or 20 words. Additional wording incurs a $100 charge.</p>
+                <p class="note">Custom wording includes one heading plus up to 6 phrases or 20 words. Additional wording may incur an extra fee.</p>
                 <div class="err">Custom wording is required.</div>
               </div>
               <div class="field full" data-field="coverColorPreference">
@@ -800,8 +801,8 @@ const PRICING = {
 const ADDON_DESCRIPTIONS = {
   'Wine Cart': 'Compact decorative wine and beverage cart available for use during your event. Beverages, glassware, and styling are not included.',
   'Post Event Cleaning': 'Ordinary post-event cleaning. Customers and vendors must still remove food, decor, rentals, belongings, and equipment within the reserved time.',
-  'Mini Magazine Booth': 'A compact photo/magazine-cover booth for your guests. Custom wording includes one heading plus up to 6 phrases or 20 words. Additional wording incurs a $100 charge.',
-  'Full Size Magazine Booth': 'Our full-size magazine cover photo booth experience. Custom wording includes one heading plus up to 6 phrases or 20 words. Additional wording incurs a $100 charge.',
+  'Mini Magazine Booth': 'A compact photo/magazine-cover booth for your guests. Custom wording includes one heading plus up to 6 phrases or 20 words. Additional wording may incur an extra fee.',
+  'Full Size Magazine Booth': 'Our full-size magazine cover photo booth experience. Custom wording includes one heading plus up to 6 phrases or 20 words. Additional wording may incur an extra fee.',
   'Chafing Dish Package': 'Chafing dishes and warming setup for catered food.',
   'Cocktail Tables': 'High-top cocktail tables (Add On/6 available). Included with The Signature; otherwise $12 per table including linen.',
   'Custom Floor Plan & Table Setup': 'Custom floor plan layout and table setup: $100 add-on for The Space. Included with The Elevated and The Signature.',
@@ -820,6 +821,35 @@ const ADDON_DESCRIPTIONS = {
   'Videography': 'Professional event videography.'
 };
 
+const PACKAGE_HIGHLIGHTS = {
+  "The Space": [
+    "100 clear acrylic chairs and tables",
+    "Kitchenette, TVs, Wi-Fi, speaker and microphone",
+    "Mobile bar station included",
+    "Parking and ADA-accessible restrooms",
+    "Security included",
+    "Outside vendors welcome"
+  ],
+  "The Elevated": [
+    "Custom floor plan and table setup",
+    "Standard linens in your choice of color",
+    "10 centerpieces and 10–12 ft balloon backdrop",
+    "Charger plates, napkins and welcome sign",
+    "Mini Magazine Booth and one photo banner",
+    "Two marquee letters/numbers with delivery",
+    "Security, setup, breakdown and post-event cleaning included"
+  ],
+  "The Signature": [
+    "12 hours included",
+    "Specialty linens, five large and five standard centerpieces",
+    "15–18 ft balloon backdrop",
+    "Full-size Magazine Booth and two photo banners",
+    "Four marquee letters/numbers with delivery",
+    "Two servers for four hours and vendor/day-of coordination",
+    "Security, setup, breakdown and post-event cleaning included"
+  ]
+};
+
 const PACKAGE_INCLUDES = {
   "The Space": [
     "100 clear acrylic chairs",
@@ -835,6 +865,7 @@ const PACKAGE_INCLUDES = {
     "All setup, breakdown, cleaning, and checkout must fit within reserved hours"
   ],
   "The Elevated": [
+    "Security included",
     "100 clear acrylic chairs",
     "Custom floor plan layout and table setup",
     "10 round 60-inch tables (seats 8–10 people per table), 2 eight-foot and 4 six-foot rectangle tables",
@@ -850,10 +881,10 @@ const PACKAGE_INCLUDES = {
     "Charger plates and napkins for up to 100 guests",
     "Welcome sign",
     "Mini Magazine Booth",
-    "Two marquee characters with delivery",
+    "Two marquee letters/numbers with delivery",
     "One printed photo banner",
     "Decorator service and delivery",
-    "Booth handling, linen care, venue labor, and ordinary post-event cleaning"
+    "Setup, breakdown, linen care, and post-event cleaning included"
   ],
   "The Signature": [
     "100 clear acrylic chairs",
@@ -873,12 +904,12 @@ const PACKAGE_INCLUDES = {
     "Charger plates and napkins for up to 100 guests",
     "Welcome sign",
     "Full-size Magazine Booth",
-    "Four marquee characters with delivery",
+    "Four marquee letters/numbers with delivery",
     "Two printed photo banners",
     "Decorator service and delivery",
     "Two servers for four hours",
     "Combined vendor and day-of coordination",
-    "Booth handling, linen care, venue labor, and ordinary post-event cleaning"
+    "Setup, breakdown, linen care, and post-event cleaning included"
   ]
 };
 
@@ -1143,7 +1174,8 @@ function renderPackages(){
         <div class="pkg-name">${pkg.name}</div>
         <div class="pkg-hours">${pkg.hours} hours</div>
         <div class="pkg-price">${pkg.startingAt ? 'Starting at ' : ''}${fmtMoney(pkg.price)}${pkg.customQuote ? '<br><small>Custom quote required. Our team will contact you.</small>' : ''}</div>
-        <details class="package-details"><summary>See all inclusions</summary><ul class="pkg-includes">${includes.map(i=>`<li>${i}</li>`).join('')}</ul></details><button type="button" class="btn btn-ghost select-package" style="margin-top:16px;width:100%;">${isSelected ? 'Selected' : 'Select package'}</button>
+        <ul class="pkg-includes">${(PACKAGE_HIGHLIGHTS[pkg.name] || []).map(i=>`<li>${i}</li>`).join('')}</ul>
+        <details class="package-details"><summary>See everything included</summary><ul class="pkg-includes">${includes.map(i=>`<li>${i}</li>`).join('')}</ul></details><button type="button" class="btn btn-ghost select-package" style="margin-top:16px;width:100%;">${isSelected ? 'Selected' : 'Select package'}</button>
       `;
       card.addEventListener('click', (e) => { if (e.target.closest('details')) return; selectPackage({ type:'package', name:pkg.name, hours:pkg.hours, price:pkg.price, customQuote: !!pkg.customQuote, startingAt: !!pkg.startingAt }); });
       grid.appendChild(card);
@@ -1333,7 +1365,7 @@ function calcDeposit(){
     const amount = state.bookingType === 'booth'
       ? Math.ceil(subtotal * PRICING.booth.depositPercent)
       : Math.min(PRICING.deposit.moreThan30Days, subtotal);
-    return { amount, label: `${fmtMoney(amount)} non-refundable deposit due today`, balance: Math.max(subtotal - amount, 0), full:false };
+    return { amount, label: `${fmtMoney(amount)} non-refundable booking deposit due today`, balance: Math.max(subtotal - amount, 0), full:false };
   }
   return { amount: subtotal, label: 'Full balance due — event is within 30 days', balance: 0, full:true };
 }
@@ -1736,11 +1768,12 @@ function renderReview(){
       <div class="rev-total"><span>Subtotal</span><span class="amt">${fmtMoney(subtotal)}</span></div>
       <div class="deposit-box">
         <div class="line"><span>${isBooth
-          ? (deposit.full ? 'Full Balance Due Today' : '50% Deposit Due Today')
-          : (deposit.full ? 'Balance Due Today' : 'Deposit Due Today')}</span><span>${fmtMoney(deposit.amount)}</span></div>
+          ? (deposit.full ? 'Full Balance Due Today' : '50% Booking Deposit Due Today')
+          : (deposit.full ? 'Balance Due Today' : 'Booking Deposit Due Today')}</span><span>${fmtMoney(deposit.amount)}</span></div>
         ${!deposit.full ? `<div class="line"><span>${isBooth ? 'Balance Due Prior To Setup' : 'Balance Remaining'}</span><span>${fmtMoney(deposit.balance)}</span></div>` : ''}
       </div>
-      <div class="hold-note">Your date will be tentatively held for 24 hours pending deposit payment.</div>
+      <div class="hold-note">Your date will be tentatively held for 24 hours pending booking deposit payment.</div>
+      ${isBooth ? '' : '<p class="note">Your Booking Deposit is non-refundable and applies toward your event total. A separate $250 Refundable Damage Deposit is due via PayPal no later than 48 hours before your event and refunded within 48 hours afterward, subject to the rental agreement. This damage deposit is separate from venue-arranged security officers.</p>'}
     </div>
   `;
   document.getElementById('reviewContainer').innerHTML = html;
@@ -1924,7 +1957,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     ${addonsListHtml}
     <div class="rev-total"><span>Total</span><span class="amt">${fmtMoney(subtotal)}</span></div>
     <div class="deposit-box">
-      <div class="line"><span>${deposit.full ? 'Full Balance Due' : 'Deposit Amount'}</span><span>${fmtMoney(deposit.amount)}</span></div>
+      <div class="line"><span>${deposit.full ? 'Full Balance Due' : 'Booking Deposit Amount'}</span><span>${fmtMoney(deposit.amount)}</span></div>
       ${!deposit.full ? `<div class="line"><span>Balance Remaining</span><span>${fmtMoney(deposit.balance)}</span></div>` : ''}
     </div>
   `;
