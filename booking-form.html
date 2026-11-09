@@ -529,7 +529,7 @@
           <h2>Select Your Package</h2>
           <div class="step-sub" id="pkgSub"></div>
           <div id="pkgContainer"></div>
-          <div class="note" id="pkgAddlHourNote">Upgrade any 6-hour event to 12 total hours for $600. Individual additional hours remain $150/hour. Subject to availability and approval.</div>
+          <div class="note" id="pkgAddlHourNote">Upgrade a 6-hour Space event to 12 total hours for $800; The Elevated upgrade is $600. Individual additional hours remain $150/hour. Subject to availability and approval.</div>
           <div class="btn-row">
             <button class="btn btn-ghost" id="back2" type="button">Back</button>
             <button class="btn btn-primary" id="next2" disabled>Next</button>
@@ -760,7 +760,7 @@ const PRICING = {
     { name: 'Marquee Letters/Numbers',  price: 40,   perUnit: true,  maxQty: 10, includedQty: { 'The Elevated': 2, 'The Signature': 4 } },
     { name: 'Black Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'White Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
-    { name: 'Full-Day Upgrade', price: 600, perUnit: false },
+    { name: 'Full-Day Upgrade', price: 600, packagePrices: { 'The Space': 800 }, perUnit: false },
     { name: 'Additional Hour',          price: 150,  perUnit: true,  maxQty: 4  },
     { name: 'Bartender',                price: 0,    customQuote: true },
     { name: 'Security',                 price: 0, customQuote: true, security: true, includedIn: ['The Elevated', 'The Signature'] },
@@ -809,7 +809,7 @@ const ADDON_DESCRIPTIONS = {
   'Marquee Letters/Numbers': 'Light-up marquee letters or numbers, priced per piece.',
   'Black Linen': 'Black linen tablecloths, priced per linen.',
   'White Linen': 'White linen tablecloths, priced per linen.',
-  'Full-Day Upgrade': 'Add 6 hours to any 6-hour venue event for 12 total hours. $600, subject to availability and approval. Replaces individually selected extra hours.',
+  'Full-Day Upgrade': 'Add 6 hours to a 6-hour venue event for 12 total hours. The Space: $800; The Elevated: $600, subject to availability and approval. Replaces individually selected extra hours.',
   'Additional Hour': 'Extend your rental at $150 per hour, subject to availability and approval.',
   'Bartender': 'Professional bartending service for your event.',
   'Security': 'Venue-contracted security is a mandatory add-on for every Space booking and is quoted separately from the base rental price. Rare exceptions require prior written owner approval. Security remains included with The Elevated and The Signature. Staffing and coverage are confirmed by Eleven 27.',
