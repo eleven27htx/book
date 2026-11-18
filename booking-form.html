@@ -1012,8 +1012,17 @@ function minutesToEndLabel(mins){
 }
 
 // ---------- calendar ----------
-// Open house: close rental requests while leaving the separate tour calendar free.
-const RENTAL_CLOSED_DATES = new Set(['2026-11-27']);
+// Close rental requests on these dates while leaving the separate tour calendar free.
+const RENTAL_CLOSED_DATES = new Set([
+  '2026-11-27',
+  '2026-12-06',
+  '2026-12-07',
+  '2026-12-08',
+  '2026-12-09',
+  '2026-12-10',
+  '2026-12-11',
+  '2026-12-12',
+]);
 
 async function fetchMonth(year, month){
   const key = `${year}-${month}`;
@@ -1828,7 +1837,9 @@ async function runFinalCheck(){
     state.finalCheck = {checked:true,venueAvailable:false,boothAvailable:false};
     msgEl.style.display = 'block';
     msgEl.className = 'avail-msg bad';
-    msgEl.textContent = 'November 27 is reserved for our open house, 2–6:30 PM. Tours are welcome; venue and magazine booth rentals are unavailable.';
+    msgEl.textContent = state.selectedDateStr === '2026-11-27'
+      ? 'November 27 is reserved for our open house, 2–6:30 PM. Tours are welcome; venue and magazine booth rentals are unavailable.'
+      : 'Venue and Magazine Booth rentals are unavailable on this date. Please select another date.';
     return;
   }
 
