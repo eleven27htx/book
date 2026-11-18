@@ -1014,6 +1014,7 @@ function minutesToEndLabel(mins){
 // ---------- calendar ----------
 // Close rental requests on these dates while leaving the separate tour calendar free.
 const RENTAL_CLOSED_DATES = new Set([
+  '2026-11-26',
   '2026-11-27',
   '2026-12-06',
   '2026-12-07',
@@ -1022,6 +1023,7 @@ const RENTAL_CLOSED_DATES = new Set([
   '2026-12-10',
   '2026-12-11',
   '2026-12-12',
+  '2026-12-25',
 ]);
 
 async function fetchMonth(year, month){
