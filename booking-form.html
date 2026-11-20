@@ -1026,6 +1026,12 @@ const RENTAL_CLOSED_DATES = new Set([
   '2026-12-25',
 ]);
 
+const PAINT_PARTY_DATE = '2026-12-20';
+
+function isRentalClosed(date){
+  return RENTAL_CLOSED_DATES.has(date) || (state.bookingType === 'venue' && date === PAINT_PARTY_DATE);
+}
+
 async function fetchMonth(year, month){
   const key = `${year}-${month}`;
   if (state.monthCache[key]) return state.monthCache[key];
@@ -1033,6 +1039,7 @@ async function fetchMonth(year, month){
   const data = await res.json();
   if (!data.success || !data.availability) throw new Error(data.error || 'Availability unavailable');
   Object.keys(data.availability).forEach(date => {
+    if (date === PAINT_PARTY_DATE) data.availability[date].venueAvailable = false;
     if (RENTAL_CLOSED_DATES.has(date)) {
       Object.assign(data.availability[date], {venueAvailable:false, boothAvailable:false, miniBoothAvailable:false, fullSizeBoothAvailable:false});
     }
@@ -1113,7 +1120,7 @@ async function renderCalendar(){
 }
 
 function selectDate(y, m, d, info){
-  if (RENTAL_CLOSED_DATES.has(dateKey(y,m,d))) return;
+  if (isRentalClosed(dateKey(y,m,d))) return;
   state.selectedDateStr = dateKey(y,m,d);
   state.selectedDayData = info;
   const dow = new Date(y, m-1, d).getDay();
@@ -1835,13 +1842,15 @@ async function runFinalCheck(){
   submitBtn.disabled = true;
   msgEl.className = 'avail-msg checking';
   msgEl.textContent = 'Checking final availability...';
-  if (RENTAL_CLOSED_DATES.has(state.selectedDateStr)) {
+  if (isRentalClosed(state.selectedDateStr)) {
     state.finalCheck = {checked:true,venueAvailable:false,boothAvailable:false};
     msgEl.style.display = 'block';
     msgEl.className = 'avail-msg bad';
     msgEl.textContent = state.selectedDateStr === '2026-11-27'
       ? 'November 27 is reserved for our open house, 2–6:30 PM. Tours are welcome; venue and magazine booth rentals are unavailable.'
-      : 'Venue and Magazine Booth rentals are unavailable on this date. Please select another date.';
+      : state.selectedDateStr === PAINT_PARTY_DATE
+        ? 'The venue is unavailable on this date. Please select another date.'
+        : 'Venue and Magazine Booth rentals are unavailable on this date. Please select another date.';
     return;
   }
 
@@ -1895,7 +1904,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
 
-  if (RENTAL_CLOSED_DATES.has(state.selectedDateStr)) { runFinalCheck(); return; }
+  if (isRentalClosed(state.selectedDateStr)) { runFinalCheck(); return; }
   if (!validSecurity() || !state.package || !state.selectedDateStr) { submitBtn.disabled = false; return; }
 
   const [y,mo,d] = state.selectedDateStr.split('-').map(Number);
