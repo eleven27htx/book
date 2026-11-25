@@ -540,6 +540,8 @@
         <div class="step" data-step="3">
           <h2>Add-Ons</h2>
           <div class="step-sub">Customize your event. Required services are marked; other add-ons are optional.</div>
+          <p class="note">Delivery and additional customization fees are subject to confirmation.</p>
+          <p class="note" id="marqueeAllowance" hidden></p>
           <div class="addon-grid" id="addonGrid"></div>
           <div id="securityFields" class="security-fields" style="display:none;">
             <h3>Security coverage</h3>
@@ -757,7 +759,13 @@ const PRICING = {
     { name: 'Full Size Magazine Booth', price: 400,  perUnit: false, includedIn: ['The Signature'] },
     { name: 'Chafing Dish Package',     price: 125,  perUnit: false },
     { name: 'Cocktail Tables',          price: 12,   perUnit: true,  maxQty: 6, includedIn: ['The Signature'] },
-    { name: 'Marquee Letters/Numbers',  price: 40,   perUnit: true,  maxQty: 10, includedQty: { 'The Elevated': 2, 'The Signature': 4 } },
+    { name: '4-ft. Marquee Letters', price: 40, perUnit: true, maxQty: 10 },
+    { name: '4-ft. Marquee Numbers', price: 40, perUnit: true, maxQty: 10 },
+    { name: 'Cold Spark Machines (2)', price: 135 },
+    { name: 'Low-Lying Fog Machines (2)', price: 135 },
+    { name: 'Champagne Wall', price: 85 },
+    { name: 'Red Carpet', price: 30 },
+    { name: 'Proposal Setup', price: 210 },
     { name: 'Black Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'White Linen',              price: 10,   perUnit: true,  maxQty: 16, includedIn: ['The Elevated', 'The Signature'] },
     { name: 'Full-Day Upgrade', price: 600, packagePrices: { 'The Space': 800 }, perUnit: false },
@@ -806,7 +814,12 @@ const ADDON_DESCRIPTIONS = {
   'Chafing Dish Package': 'Chafing dishes and warming setup for catered food.',
   'Cocktail Tables': 'High-top cocktail tables (Add On/6 available). Included with The Signature; otherwise $12 per table including linen.',
   'Custom Floor Plan & Table Setup': 'Custom floor plan layout and table setup: $100 add-on for The Space. Included with The Elevated and The Signature.',
-  'Marquee Letters/Numbers': 'Light-up marquee letters or numbers, priced per piece.',
+  '4-ft. Marquee Letters': 'Light-up letters, priced per piece.',
+  '4-ft. Marquee Numbers': 'Light-up numbers, priced per piece.',
+  'Cold Spark Machines (2)': 'Venue-arranged outdoor effect. Price covers both machines.',
+  'Low-Lying Fog Machines (2)': 'Venue-arranged indoor effect. Price covers both machines.',
+  'Champagne Wall': 'Holds 56 glasses. Glasses are not included.',
+  'Proposal Setup': 'Includes a heart and flowers.',
   'Black Linen': 'Black linen tablecloths, priced per linen.',
   'White Linen': 'White linen tablecloths, priced per linen.',
   'Full-Day Upgrade': 'Add 6 hours to a 6-hour venue event for 12 total hours. The Space: $800; The Elevated: $600, subject to availability and approval. Replaces individually selected extra hours.',
@@ -1263,11 +1276,19 @@ function addonIsIncluded(addon){
     (addon.name === 'Day of/Vendor Coordination' && state.addons['Full Service Event Planning'].selected));
 }
 
+function includedMarqueeQuantity(){
+  return { 'The Elevated': 2, 'The Signature': 4 }[currentPackageName()] || 0;
+}
+
 function renderAddons(){
   const grid = document.getElementById('addonGrid');
   grid.innerHTML = '';
   const pkgName = currentPackageName();
   const boothDay = state.selectedDayData || {};
+  const includedMarquee = includedMarqueeQuantity();
+  const marqueeAllowance = document.getElementById('marqueeAllowance');
+  marqueeAllowance.hidden = includedMarquee === 0;
+  marqueeAllowance.textContent = `Your package includes ${includedMarquee} marquee characters in any mix of letters and numbers. Select only additional characters below.`;
   if (securityQuoteRequired()) state.addons.Security.selected = true;
 
   PRICING.addons.forEach(addon => {
@@ -1293,7 +1314,6 @@ function renderAddons(){
     }
     if (addon.name === 'Full Service Event Planning' && pkgName === 'The Signature') bodyExtra += '<div class="addon-desc">$400 upgrade from your included day-of/vendor coordination.</div>';
     if (pkgName === 'The Elevated' && (addon.name === 'Black Linen' || addon.name === 'White Linen')) bodyExtra += '<div class="addon-included-tag">Standard linens in your choice of color are included.</div>';
-    if (addon.includedQty && addon.includedQty[pkgName]) bodyExtra += `<div class="addon-included-tag">${addon.includedQty[pkgName]} included. Select only additional characters below.</div>`;
     if (boothLimited){
       bodyExtra += '<div class="addon-warn">Magazine Booth may be unavailable for this date. Select it and our team will confirm.</div>';
     }
@@ -1352,7 +1372,6 @@ function renderAddons(){
 
 // ---------- pricing calc ----------
 function getSelectedAddons(){
-  const pkgName = currentPackageName();
   const result = [];
   if (state.bookingType !== 'venue') return result;
   PRICING.addons.forEach(addon => {
@@ -1975,7 +1994,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     videography: selectedAddons.includes('Videography') ? 'Yes' : 'No',
     cocktail_qty: state.bookingType === 'venue' && currentPackageName() === 'The Signature' ? 6 : (addonQty['Cocktail Tables'] || 0),
     custom_floor_plan_table_setup: selectedAddons.includes('Custom Floor Plan & Table Setup') ? 'Yes' : 'No',
-    marquee_qty: (addonQty['Marquee Letters/Numbers'] || 0) + (state.bookingType === 'venue' ? ({'The Elevated':2,'The Signature':4}[currentPackageName()] || 0) : 0),
+    marquee_qty: (addonQty['4-ft. Marquee Letters'] || 0) + (addonQty['4-ft. Marquee Numbers'] || 0) + (state.bookingType === 'venue' ? includedMarqueeQuantity() : 0),
     black_linen: addonQty['Black Linen'] || 0,
     white_linen: addonQty['White Linen'] || 0,
     extra_hours: reservedHours() - state.package.hours,
